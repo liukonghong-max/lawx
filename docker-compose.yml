@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: law4x-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: law4x
+      POSTGRES_PASSWORD: law4x_dev
+      POSTGRES_DB: law4x
+    ports:
+      - "5432:5432"
+    volumes:
+      - law4x_postgres_data:/var/lib/postgresql/data
+      - ./db/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_initial_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U law4x -d law4x"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  law4x_postgres_data:
