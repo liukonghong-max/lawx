@@ -1,0 +1,24 @@
+.DS_Store
+.localized
+
+# IDE
+.idea/
+.vscode/
+
+# Java
+target/
+*.class
+
+# Node
+node_modules/
+dist/
+build/
+.next/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
