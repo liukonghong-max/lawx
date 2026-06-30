@@ -1,5 +1,6 @@
 package com.law4x.rag.infrastructure.persistence;
 
+import com.law4x.rag.domain.model.EmbeddableLawArticle;
 import com.law4x.rag.domain.model.RagSearchResult;
 import com.law4x.rag.domain.repository.LawArticleEmbeddingRepository;
 import java.math.BigDecimal;
@@ -59,6 +60,70 @@ public class JdbcLawArticleEmbeddingRepository implements LawArticleEmbeddingRep
                     );
                 })
                 .list();
+    }
+
+    @Override
+    public List<EmbeddableLawArticle> findArticlesMissingEmbeddings(String embeddingModel, int limit) {
+        return jdbcClient.sql("""
+                        SELECT
+                            a.id AS article_id,
+                            a.full_path,
+                            a.content,
+                            a.content_hash
+                        FROM law_articles a
+                        JOIN law_documents d ON d.id = a.document_id
+                        LEFT JOIN law_article_embeddings e
+                          ON e.article_id = a.id
+                         AND e.embedding_model = :embeddingModel
+                         AND e.content_hash = a.content_hash
+                        WHERE a.effective_status = 'effective'
+                          AND d.status = 'effective'
+                          AND e.id IS NULL
+                        ORDER BY a.article_order ASC
+                        LIMIT :limit
+                        """)
+                .param("embeddingModel", embeddingModel)
+                .param("limit", limit)
+                .query((rs, rowNum) -> new EmbeddableLawArticle(
+                        rs.getObject("article_id", UUID.class),
+                        rs.getString("full_path"),
+                        rs.getString("content"),
+                        rs.getString("content_hash")
+                ))
+                .list();
+    }
+
+    @Override
+    public void upsertArticleEmbedding(
+            UUID articleId,
+            String embeddingModel,
+            String contentHash,
+            List<BigDecimal> embedding
+    ) {
+        jdbcClient.sql("""
+                        INSERT INTO law_article_embeddings (
+                            article_id,
+                            embedding_model,
+                            content_hash,
+                            embedding
+                        )
+                        VALUES (
+                            :articleId,
+                            :embeddingModel,
+                            :contentHash,
+                            CAST(:embedding AS vector)
+                        )
+                        ON CONFLICT (article_id, embedding_model)
+                        DO UPDATE SET
+                            content_hash = EXCLUDED.content_hash,
+                            embedding = EXCLUDED.embedding,
+                            updated_at = now()
+                        """)
+                .param("articleId", articleId)
+                .param("embeddingModel", embeddingModel)
+                .param("contentHash", contentHash)
+                .param("embedding", toVectorLiteral(embedding))
+                .update();
     }
 
     private static String toVectorLiteral(List<BigDecimal> embedding) {

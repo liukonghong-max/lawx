@@ -2,6 +2,7 @@ package com.law4x.rag.infrastructure.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.law4x.rag.domain.model.EmbeddableLawArticle;
 import com.law4x.rag.domain.model.RagSearchResult;
 import java.math.BigDecimal;
 import java.util.List;
@@ -60,6 +61,51 @@ class JdbcLawArticleEmbeddingRepositoryTest {
         assertThat(results.get(0).reason()).isEqualTo("当前使用 pgvector 向量检索命中。");
     }
 
+    @Test
+    void findsMissingEmbeddingsAndUpsertsGeneratedEmbedding() {
+        UUID documentId = insertDocument();
+        String contentHash = UUID.randomUUID().toString();
+        UUID articleId = insertArticle(documentId, "测试第三条", 3, "承租人应当按照约定支付租金。", contentHash);
+
+        List<EmbeddableLawArticle> missingArticles = repository.findArticlesMissingEmbeddings(MODEL_NAME, 10);
+
+        assertThat(missingArticles).extracting(EmbeddableLawArticle::articleId).contains(articleId);
+
+        repository.upsertArticleEmbedding(articleId, MODEL_NAME, contentHash, oneHotVector(2));
+
+        Integer count = jdbcClient.sql("""
+                        SELECT count(*)
+                        FROM law_article_embeddings
+                        WHERE article_id = :articleId
+                          AND embedding_model = :embeddingModel
+                          AND content_hash = :contentHash
+                        """)
+                .param("articleId", articleId)
+                .param("embeddingModel", MODEL_NAME)
+                .param("contentHash", contentHash)
+                .query(Integer.class)
+                .single();
+        assertThat(count).isEqualTo(1);
+        assertThat(repository.findArticlesMissingEmbeddings(MODEL_NAME, 10))
+                .extracting(EmbeddableLawArticle::articleId)
+                .doesNotContain(articleId);
+
+        repository.upsertArticleEmbedding(articleId, MODEL_NAME, "content-hash-v2", oneHotVector(3));
+
+        Integer updatedCount = jdbcClient.sql("""
+                        SELECT count(*)
+                        FROM law_article_embeddings
+                        WHERE article_id = :articleId
+                          AND embedding_model = :embeddingModel
+                          AND content_hash = 'content-hash-v2'
+                        """)
+                .param("articleId", articleId)
+                .param("embeddingModel", MODEL_NAME)
+                .query(Integer.class)
+                .single();
+        assertThat(updatedCount).isEqualTo(1);
+    }
+
     private UUID insertDocument() {
         return jdbcClient.sql("""
                         INSERT INTO law_documents (title, law_type, issuer, status)
@@ -71,6 +117,16 @@ class JdbcLawArticleEmbeddingRepositoryTest {
     }
 
     private UUID insertArticle(UUID documentId, String articleNo, int articleOrder, String content) {
+        return insertArticle(documentId, articleNo, articleOrder, content, UUID.randomUUID().toString());
+    }
+
+    private UUID insertArticle(
+            UUID documentId,
+            String articleNo,
+            int articleOrder,
+            String content,
+            String contentHash
+    ) {
         return jdbcClient.sql("""
                         INSERT INTO law_articles (
                             document_id,
@@ -96,7 +152,7 @@ class JdbcLawArticleEmbeddingRepositoryTest {
                 .param("articleNo", articleNo)
                 .param("articleOrder", articleOrder)
                 .param("content", content)
-                .param("contentHash", UUID.randomUUID().toString())
+                .param("contentHash", contentHash)
                 .query(UUID.class)
                 .single();
     }

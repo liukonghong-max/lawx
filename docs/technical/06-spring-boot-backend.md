@@ -22,6 +22,7 @@
 - 法条详情 use case
 - RAG 检索骨架 use case
 - pgvector 法条向量检索 repository
+- 缺失 embedding 生成 use case
 - PostgreSQL 检索 repository
 - REST 查询接口
 
@@ -65,6 +66,10 @@ HybridSearchUseCaseTest
 - wrapsKeywordSearchAsRagResults
 - returnsEmptyWhenOriginalQueryHasNoResults
 
+GenerateMissingArticleEmbeddingsUseCaseTest
+- rejectsBlankEmbeddingModel
+- generatesAndStoresEmbeddingsForMissingArticles
+
 RagSearchControllerTest
 - searchesRagEvidence
 - returnsBadRequestForBlankQuery
@@ -74,6 +79,7 @@ RagSearchControllerIntegrationTest
 
 JdbcLawArticleEmbeddingRepositoryTest
 - searchesSimilarArticlesByPgvectorDistance
+- findsMissingEmbeddingsAndUpsertsGeneratedEmbedding
 ```
 
 ## 4. Parser Skill 和 Java 后端的关系
@@ -108,7 +114,7 @@ Parser Skill
 
 下一步实现：
 
-- embedding 生成
+- 真实 embedding provider 适配
 - keyword + vector hybrid 合并
 - `RagTestService`
 - AgentScope Java v2 RAG tool

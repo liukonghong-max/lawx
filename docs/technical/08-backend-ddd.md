@@ -46,12 +46,17 @@ com.law4x.law
 com.law4x.rag
 ├── domain
 │   └── model
+│       ├── EmbeddableLawArticle
 │       └── RagSearchResult
 │   └── repository
+│       ├── EmbeddingClient
 │       └── LawArticleEmbeddingRepository
 ├── application
+│   ├── GenerateMissingArticleEmbeddingsUseCase
 │   └── HybridSearchUseCase
 ├── infrastructure
+│   ├── embedding
+│   │   └── UnsupportedEmbeddingClient
 │   └── persistence
 │       └── JdbcLawArticleEmbeddingRepository
 └── interfaces
@@ -62,6 +67,8 @@ com.law4x.rag
 当前 `HybridSearchUseCase` 先复用 `LawArticleRepository` 的关键词检索能力，并将结果包装成 RAG 检索结果格式。原句无关键词结果时不再做临时法律意图扩展，后续由 embedding + pgvector 承担自然语言召回。
 
 当前 `JdbcLawArticleEmbeddingRepository` 已能基于 `law_article_embeddings.embedding` 执行 pgvector cosine distance 查询，拿到 query embedding 后即可召回相似法条。
+
+当前 `GenerateMissingArticleEmbeddingsUseCase` 已能查找缺失 embedding 的现行有效法条，并将生成结果 upsert 到 `law_article_embeddings`。真实 embedding provider 尚未接入，当前 `UnsupportedEmbeddingClient` 只用于明确提示未配置。
 
 ## 3. 分层职责
 
@@ -75,7 +82,9 @@ com.law4x.rag
 - `LawArticleDetail`：完整法条、法规元数据和来源信息。
 - `LawArticleRepository`：法规库检索端口。
 - `RagSearchResult`：面向 RAG 的证据召回结果，包含命中方式、关键词分数、向量分数和最终分数。
+- `EmbeddableLawArticle`：需要生成 embedding 的法条输入。
 - `LawArticleEmbeddingRepository`：向量检索端口，按 embedding 模型和 query embedding 召回相似法条。
+- `EmbeddingClient`：embedding 生成端口，后续可由 OpenAI、DashScope 或本地模型适配。
 
 后续可扩展：
 
@@ -92,6 +101,7 @@ com.law4x.rag
 当前包含：
 
 - `GetLawArticleDetailUseCase`
+- `GenerateMissingArticleEmbeddingsUseCase`
 - `SearchLawArticlesUseCase`
 - `HybridSearchUseCase`
 
@@ -104,6 +114,7 @@ com.law4x.rag
 - 按 articleId 获取完整法条详情。
 - 将关键词检索结果包装为 RAG 检索结果。
 - 限制 RAG 检索默认返回数量和最大返回数量。
+- 查找缺失 embedding 的法条，调用 `EmbeddingClient` 生成向量，并写入 `law_article_embeddings`。
 
 后续可扩展：
 
@@ -124,6 +135,7 @@ com.law4x.rag
 - 使用 `JdbcClient` 查询 PostgreSQL。
 - 实现条号、标题、章节路径、正文、`pg_trgm` 相似度综合排序。
 - 使用 `law_article_embeddings` 和 pgvector cosine distance 查询相似法条。
+- 使用 `ON CONFLICT (article_id, embedding_model)` upsert embedding。
 
 后续可扩展：
 
