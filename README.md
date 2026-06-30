@@ -35,6 +35,23 @@ lawx 的 MVP 目标是打通法律法规 RAG Agent 的最小闭环：
 - 检索：keyword search + vector search + rerank
 - Agent：基于可追溯 citation 的法律法规问答
 
+## 后端主线
+
+正式后端位于：
+
+```text
+backend/
+```
+
+运行 Java 测试：
+
+```bash
+cd backend
+mvn test
+```
+
+当前 Java 后端已实现民法典 docx 解析测试和解析器。根目录下的 Python 脚本用于数据验证和离线辅助，不作为线上后端主实现。
+
 ## 本地数据库
 
 启动 PostgreSQL + pgvector：
