@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: law4x-backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/law4x
+    username: law4x
+    password: law4x_dev
+    driver-class-name: org.postgresql.Driver
+
+server:
+  port: 8080
