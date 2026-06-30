@@ -54,18 +54,23 @@ class LawArticleDetailControllerTest {
 
         mockMvc.perform(get("/api/law/articles/{articleId}", articleId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.articleId").value(articleId.toString()))
-                .andExpect(jsonPath("$.documentTitle").value("中华人民共和国民法典"))
-                .andExpect(jsonPath("$.articleNo").value("第五百七十七条"))
-                .andExpect(jsonPath("$.content").value("当事人一方不履行合同义务或者履行合同义务不符合约定的，应当承担违约责任。"))
-                .andExpect(jsonPath("$.documentStatus").value("effective"))
-                .andExpect(jsonPath("$.effectiveStatus").value("effective"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("success"))
+                .andExpect(jsonPath("$.data.articleId").value(articleId.toString()))
+                .andExpect(jsonPath("$.data.documentTitle").value("中华人民共和国民法典"))
+                .andExpect(jsonPath("$.data.articleNo").value("第五百七十七条"))
+                .andExpect(jsonPath("$.data.content").value("当事人一方不履行合同义务或者履行合同义务不符合约定的，应当承担违约责任。"))
+                .andExpect(jsonPath("$.data.documentStatus").value("effective"))
+                .andExpect(jsonPath("$.data.effectiveStatus").value("effective"));
     }
 
     @Test
     void returnsNotFoundWhenArticleDoesNotExist() throws Exception {
         mockMvc.perform(get("/api/law/articles/{articleId}", UUID.randomUUID()))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("article not found"))
+                .andExpect(jsonPath("$.data").doesNotExist());
     }
 
     @TestConfiguration

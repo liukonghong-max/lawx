@@ -1,5 +1,6 @@
 package com.law4x.law.interfaces.rest;
 
+import com.law4x.common.interfaces.rest.ApiResponse;
 import com.law4x.law.application.GetLawArticleDetailUseCase;
 import com.law4x.law.domain.model.LawArticleDetail;
 import java.time.LocalDate;
@@ -21,11 +22,14 @@ public class LawArticleDetailController {
     }
 
     @GetMapping("/{articleId}")
-    public ResponseEntity<ArticleDetailResponse> get(@PathVariable String articleId) {
+    public ResponseEntity<ApiResponse<ArticleDetailResponse>> get(@PathVariable String articleId) {
         return getLawArticleDetailUseCase.get(articleId)
                 .map(ArticleDetailResponse::from)
+                .map(ApiResponse::success)
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseGet(() -> ResponseEntity
+                        .status(404)
+                        .body(ApiResponse.error("NOT_FOUND", "article not found")));
     }
 
     public record ArticleDetailResponse(

@@ -123,6 +123,18 @@ com.law4x.law
 
 ## 4. 当前 API
 
+REST API 统一返回：
+
+```json
+{
+  "code": "SUCCESS",
+  "message": "success",
+  "data": {}
+}
+```
+
+错误响应同样使用 `code/message/data`，其中 `data` 为 `null`。
+
 ### 法条检索
 
 ```http
@@ -133,15 +145,19 @@ GET /api/law/articles/search?query=第五百七十七条&limit=3
 
 ```json
 {
-  "items": [
-    {
-      "documentTitle": "中华人民共和国民法典",
-      "articleNo": "第五百七十七条",
-      "fullPath": "中华人民共和国民法典 > 第三编 合同 > 第八章 违约责任 > 第五百七十七条",
-      "preview": "当事人一方不履行合同义务或者履行合同义务不符合约定的，应当承担违约责任。",
-      "score": 116.21
-    }
-  ]
+  "code": "SUCCESS",
+  "message": "success",
+  "data": {
+    "items": [
+      {
+        "documentTitle": "中华人民共和国民法典",
+        "articleNo": "第五百七十七条",
+        "fullPath": "中华人民共和国民法典 > 第三编 合同 > 第八章 违约责任 > 第五百七十七条",
+        "preview": "当事人一方不履行合同义务或者履行合同义务不符合约定的，应当承担违约责任。",
+        "score": 116.21
+      }
+    ]
+  }
 }
 ```
 
@@ -155,22 +171,26 @@ GET /api/law/articles/{articleId}
 
 ```json
 {
-  "articleId": "00000000-0000-0000-0000-000000000000",
-  "documentTitle": "中华人民共和国民法典",
-  "lawType": "法律",
-  "issuer": "全国人民代表大会",
-  "publishDate": "2020-05-28",
-  "effectiveDate": "2021-01-01",
-  "documentStatus": "effective",
-  "sourceUrl": null,
-  "bookTitle": "第三编 合同",
-  "chapterTitle": "第八章 违约责任",
-  "sectionTitle": null,
-  "articleNo": "第五百七十七条",
-  "articleOrder": 577,
-  "content": "当事人一方不履行合同义务或者履行合同义务不符合约定的，应当承担继续履行、采取补救措施或者赔偿损失等违约责任。",
-  "fullPath": "中华人民共和国民法典 > 第三编 合同 > 第八章 违约责任 > 第五百七十七条",
-  "effectiveStatus": "effective"
+  "code": "SUCCESS",
+  "message": "success",
+  "data": {
+    "articleId": "00000000-0000-0000-0000-000000000000",
+    "documentTitle": "中华人民共和国民法典",
+    "lawType": "法律",
+    "issuer": "全国人民代表大会",
+    "publishDate": "2020-05-28",
+    "effectiveDate": "2021-01-01",
+    "documentStatus": "effective",
+    "sourceUrl": null,
+    "bookTitle": "第三编 合同",
+    "chapterTitle": "第八章 违约责任",
+    "sectionTitle": null,
+    "articleNo": "第五百七十七条",
+    "articleOrder": 577,
+    "content": "当事人一方不履行合同义务或者履行合同义务不符合约定的，应当承担继续履行、采取补救措施或者赔偿损失等违约责任。",
+    "fullPath": "中华人民共和国民法典 > 第三编 合同 > 第八章 违约责任 > 第五百七十七条",
+    "effectiveStatus": "effective"
+  }
 }
 ```
 

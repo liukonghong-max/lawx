@@ -45,10 +45,12 @@ class LawArticleSearchControllerTest {
                         .param("query", "第五百七十七条")
                         .param("limit", "3"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items", hasSize(1)))
-                .andExpect(jsonPath("$.items[0].documentTitle").value("中华人民共和国民法典"))
-                .andExpect(jsonPath("$.items[0].articleNo").value("第五百七十七条"))
-                .andExpect(jsonPath("$.items[0].score").value(116.21));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("success"))
+                .andExpect(jsonPath("$.data.items", hasSize(1)))
+                .andExpect(jsonPath("$.data.items[0].documentTitle").value("中华人民共和国民法典"))
+                .andExpect(jsonPath("$.data.items[0].articleNo").value("第五百七十七条"))
+                .andExpect(jsonPath("$.data.items[0].score").value(116.21));
 
         org.assertj.core.api.Assertions.assertThat(lawArticleRepository.lastQuery).isEqualTo("第五百七十七条");
         org.assertj.core.api.Assertions.assertThat(lawArticleRepository.lastLimit).isEqualTo(3);
@@ -57,10 +59,12 @@ class LawArticleSearchControllerTest {
     @Test
     void returnsBadRequestForBlankQuery() throws Exception {
         mockMvc.perform(get("/api/law/articles/search")
-                        .param("query", " ")
-                        .param("limit", "10"))
+                .param("query", " ")
+                .param("limit", "10"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("query must not be blank"));
+                .andExpect(jsonPath("$.code").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.message").value("query must not be blank"))
+                .andExpect(jsonPath("$.data").doesNotExist());
     }
 
     @TestConfiguration
