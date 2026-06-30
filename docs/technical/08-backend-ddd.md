@@ -54,7 +54,7 @@ com.law4x.rag
         └── RagSearchController
 ```
 
-当前 `HybridSearchUseCase` 先复用 `LawArticleRepository` 的关键词检索能力，并将结果包装成 RAG 检索结果格式。这样前端、AgentScope tool 和检索测试页可以先对齐接口，后续再替换为真正的 keyword + vector + rerank。
+当前 `HybridSearchUseCase` 先复用 `LawArticleRepository` 的关键词检索能力，并将结果包装成 RAG 检索结果格式。若自然语言债务问题原句无结果，会临时扩展到 `借款合同`、`违约责任`、`诉讼时效` 等检索词。这样前端、AgentScope tool 和检索测试页可以先对齐接口，后续再替换为真正的 keyword + vector + rerank。
 
 ## 3. 分层职责
 
@@ -228,7 +228,7 @@ GET /api/law/articles/{articleId}
 GET /api/rag/search?query=别人欠钱不还怎么办&limit=5
 ```
 
-当前为 RAG 骨架版本：先返回关键词召回结果，`matchType` 固定为 `keyword`，`vectorScore` 为 `0`。后续接入 embedding 和 pgvector 后，`matchType` 会扩展为 `vector` 或 `hybrid`。
+当前为 RAG 骨架版本：先返回关键词召回结果，`vectorScore` 为 `0`。如果原句无结果且命中内置法律意图词，`matchType` 会返回 `keyword_expansion`。后续接入 embedding 和 pgvector 后，`matchType` 会扩展为 `vector` 或 `hybrid`。
 
 返回：
 
@@ -244,11 +244,11 @@ GET /api/rag/search?query=别人欠钱不还怎么办&limit=5
         "articleNo": "第六百七十五条",
         "fullPath": "中华人民共和国民法典 > 第三编 合同 > 第十二章 借款合同 > 第六百七十五条",
         "preview": "借款人应当按照约定的期限返还借款。",
-        "matchType": "keyword",
+        "matchType": "keyword_expansion",
         "keywordScore": 42.50,
         "vectorScore": 0,
         "finalScore": 42.50,
-        "reason": "当前使用关键词检索命中，后续会叠加向量召回和 rerank。"
+        "reason": "当前通过法律意图词扩展命中，后续会叠加向量召回和 rerank。"
       }
     ]
   }

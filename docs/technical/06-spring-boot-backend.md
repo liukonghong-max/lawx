@@ -62,6 +62,7 @@ LawArticleDetailControllerTest
 HybridSearchUseCaseTest
 - rejectsBlankQuery
 - wrapsKeywordSearchAsRagResults
+- expandsDebtQuestionWhenOriginalQueryHasNoResults
 
 RagSearchControllerTest
 - searchesRagEvidence
