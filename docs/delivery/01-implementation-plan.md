@@ -4,17 +4,19 @@
 
 ### 目标
 
-完成民法典 docx 解析和入库。
+通过 Parser Skill / 离线工具完成民法典 docx 解析和入库。
 
 ### 任务
 
 - 建表 `law_documents`。
 - 建表 `law_articles`。
 - 建表 `knowledge_import_jobs`。
+- 实现 Parser Skill 原型。
 - 实现 docx 读取。
 - 实现条文解析。
-- 实现解析预览。
-- 实现确认发布。
+- 输出标准结构化 JSON / SQL。
+- 写入 `law_documents` 和 `law_articles`。
+- 记录导入任务。
 
 ### 验收
 
@@ -23,6 +25,7 @@
 - 能识别通过日期：2020-05-28。
 - 能解析出 1260 条。
 - 每条有条号、正文、章节路径。
+- Spring Boot 后端不直接承担文件解析职责。
 
 ## 阶段 2：关键词检索
 
@@ -35,6 +38,7 @@
 - 实现法规名称搜索。
 - 实现条号搜索。
 - 实现正文关键词搜索。
+- Spring Boot 消费 `law_documents` 和 `law_articles`。
 - 实现法规库页。
 - 实现专业检索页基础版本。
 

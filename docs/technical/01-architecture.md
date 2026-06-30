@@ -64,8 +64,7 @@ rag
 law
 - LawDocumentService
 - LawArticleService
-- LawImportService
-- LawParserService
+- LawArticleSearchService
 
 eval
 - EvalCaseService
@@ -155,9 +154,7 @@ eval
 ## 5. RAG 流程
 
 ```text
-法规文件
- -> 文本抽取
- -> 条文解析
+Parser Skill / 离线导入工具
  -> law_documents / law_articles
  -> embedding
  -> pgvector
@@ -210,7 +207,21 @@ keyword score
 
 用于检索测试页，返回关键词、向量和 rerank 结果。
 
-## 8. AG-UI 集成
+## 8. Parser Skill 边界
+
+法律文件解析由独立 Parser Skill / 离线导入工具完成，不放在 Spring Boot 核心后端中。
+
+Parser Skill 负责：
+
+- 读取 docx、pdf、html、txt。
+- 识别法规元数据。
+- 按编、章、节、条切分。
+- 生成标准结构化 JSON / SQL。
+- 写入 `law_documents` 和 `law_articles`。
+
+Spring Boot 负责消费结构化后的法规数据，提供检索、RAG、Agent 和 AG-UI 能力。
+
+## 9. AG-UI 集成
 
 后端提供：
 
@@ -233,7 +244,7 @@ text/event-stream
 - 引用依据
 - 错误状态
 
-## 9. 引用可信机制
+## 10. 引用可信机制
 
 - Agent 回答前必须先检索知识库。
 - 回答中的法律依据必须来自检索结果。

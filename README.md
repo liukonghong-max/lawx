@@ -24,6 +24,9 @@ lawx 的 MVP 目标是打通法律法规 RAG Agent 的最小闭环：
 - `docs/technical/02-database-schema.md`：数据库 Schema 设计
 - `docs/technical/03-local-database.md`：本地数据库启动说明
 - `docs/technical/04-data-import.md`：法规数据导入说明
+- `docs/technical/05-keyword-search.md`：关键词检索说明
+- `docs/technical/06-spring-boot-backend.md`：Spring Boot 后端说明
+- `docs/technical/07-legal-parser-skill.md`：法律文件解析 Skill 设计
 - `docs/delivery/01-implementation-plan.md`：MVP 实现计划
 - `中华人民共和国民法典_20200528.docx`：第一条法规导入样本
 
@@ -50,7 +53,7 @@ cd backend
 mvn test
 ```
 
-当前 Java 后端已实现民法典 docx 解析测试和解析器。根目录下的 Python 脚本用于数据验证和离线辅助，不作为线上后端主实现。
+当前 Spring Boot 后端只保留正式服务骨架。法律文件解析归入 Parser Skill / 离线导入工具，不放在核心后端里。
 
 ## 本地数据库
 
