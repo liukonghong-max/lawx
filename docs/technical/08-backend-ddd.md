@@ -47,14 +47,21 @@ com.law4x.rag
 ├── domain
 │   └── model
 │       └── RagSearchResult
+│   └── repository
+│       └── LawArticleEmbeddingRepository
 ├── application
 │   └── HybridSearchUseCase
+├── infrastructure
+│   └── persistence
+│       └── JdbcLawArticleEmbeddingRepository
 └── interfaces
     └── rest
         └── RagSearchController
 ```
 
-当前 `HybridSearchUseCase` 先复用 `LawArticleRepository` 的关键词检索能力，并将结果包装成 RAG 检索结果格式。若自然语言债务问题原句无结果，会临时扩展到 `借款合同`、`违约责任`、`诉讼时效` 等检索词。这样前端、AgentScope tool 和检索测试页可以先对齐接口，后续再替换为真正的 keyword + vector + rerank。
+当前 `HybridSearchUseCase` 先复用 `LawArticleRepository` 的关键词检索能力，并将结果包装成 RAG 检索结果格式。原句无关键词结果时不再做临时法律意图扩展，后续由 embedding + pgvector 承担自然语言召回。
+
+当前 `JdbcLawArticleEmbeddingRepository` 已能基于 `law_article_embeddings.embedding` 执行 pgvector cosine distance 查询，拿到 query embedding 后即可召回相似法条。
 
 ## 3. 分层职责
 
@@ -68,6 +75,7 @@ com.law4x.rag
 - `LawArticleDetail`：完整法条、法规元数据和来源信息。
 - `LawArticleRepository`：法规库检索端口。
 - `RagSearchResult`：面向 RAG 的证据召回结果，包含命中方式、关键词分数、向量分数和最终分数。
+- `LawArticleEmbeddingRepository`：向量检索端口，按 embedding 模型和 query embedding 召回相似法条。
 
 后续可扩展：
 
@@ -109,15 +117,16 @@ com.law4x.rag
 当前包含：
 
 - `JdbcLawArticleRepository`
+- `JdbcLawArticleEmbeddingRepository`
 
 职责：
 
 - 使用 `JdbcClient` 查询 PostgreSQL。
 - 实现条号、标题、章节路径、正文、`pg_trgm` 相似度综合排序。
+- 使用 `law_article_embeddings` 和 pgvector cosine distance 查询相似法条。
 
 后续可扩展：
 
-- `PgVectorLawArticleRepository`
 - `OpenAiEmbeddingClient`
 - `AgentScopeToolAdapter`
 
@@ -228,7 +237,7 @@ GET /api/law/articles/{articleId}
 GET /api/rag/search?query=别人欠钱不还怎么办&limit=5
 ```
 
-当前为 RAG 骨架版本：先返回关键词召回结果，`vectorScore` 为 `0`。如果原句无结果且命中内置法律意图词，`matchType` 会返回 `keyword_expansion`。后续接入 embedding 和 pgvector 后，`matchType` 会扩展为 `vector` 或 `hybrid`。
+当前为 RAG 骨架版本：先返回关键词召回结果，`vectorScore` 为 `0`。如果原句无关键词结果，返回空列表。后续接入 embedding 和 pgvector 后，`matchType` 会扩展为 `vector` 或 `hybrid`。
 
 返回：
 
@@ -244,11 +253,11 @@ GET /api/rag/search?query=别人欠钱不还怎么办&limit=5
         "articleNo": "第六百七十五条",
         "fullPath": "中华人民共和国民法典 > 第三编 合同 > 第十二章 借款合同 > 第六百七十五条",
         "preview": "借款人应当按照约定的期限返还借款。",
-        "matchType": "keyword_expansion",
+        "matchType": "keyword",
         "keywordScore": 42.50,
         "vectorScore": 0,
         "finalScore": 42.50,
-        "reason": "当前通过法律意图词扩展命中，后续会叠加向量召回和 rerank。"
+        "reason": "当前使用关键词检索命中，后续会叠加向量召回和 rerank。"
       }
     ]
   }
@@ -259,9 +268,10 @@ GET /api/rag/search?query=别人欠钱不还怎么办&limit=5
 
 建议按这个顺序推进：
 
-1. 向量底座：embedding 字段或 `article_embeddings` 表
-2. 引用校验：`ValidateCitationsUseCase`
-3. Agent tool 适配：`SearchLawArticlesTool`
-4. AG-UI 流式接口：`AguiController`
+1. embedding 生成：`OpenAiEmbeddingClient` 或其他 embedding provider
+2. hybrid 合并：关键词结果 + 向量结果去重、合分和排序
+3. 引用校验：`ValidateCitationsUseCase`
+4. Agent tool 适配：`SearchLawArticlesTool`
+5. AG-UI 流式接口：`AguiController`
 
 这样可以先把法规库能力做扎实，再把 Agent 接进来。

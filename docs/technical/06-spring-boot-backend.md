@@ -21,6 +21,7 @@
 - 法条关键词检索 use case
 - 法条详情 use case
 - RAG 检索骨架 use case
+- pgvector 法条向量检索 repository
 - PostgreSQL 检索 repository
 - REST 查询接口
 
@@ -62,11 +63,17 @@ LawArticleDetailControllerTest
 HybridSearchUseCaseTest
 - rejectsBlankQuery
 - wrapsKeywordSearchAsRagResults
-- expandsDebtQuestionWhenOriginalQueryHasNoResults
+- returnsEmptyWhenOriginalQueryHasNoResults
 
 RagSearchControllerTest
 - searchesRagEvidence
 - returnsBadRequestForBlankQuery
+
+RagSearchControllerIntegrationTest
+- returnsEmptyWhenDebtQuestionHasNoKeywordHit
+
+JdbcLawArticleEmbeddingRepositoryTest
+- searchesSimilarArticlesByPgvectorDistance
 ```
 
 ## 4. Parser Skill 和 Java 后端的关系
@@ -102,7 +109,7 @@ Parser Skill
 下一步实现：
 
 - embedding 生成
-- pgvector 查询
+- keyword + vector hybrid 合并
 - `RagTestService`
 - AgentScope Java v2 RAG tool
 - AG-UI `/ag-ui` 接口

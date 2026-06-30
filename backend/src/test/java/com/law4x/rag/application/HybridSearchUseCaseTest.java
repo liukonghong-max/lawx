@@ -8,9 +8,7 @@ import com.law4x.law.domain.repository.LawArticleRepository;
 import com.law4x.rag.domain.model.RagSearchResult;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -57,35 +55,14 @@ class HybridSearchUseCaseTest {
     }
 
     @Test
-    void expandsDebtQuestionWhenOriginalQueryHasNoResults() {
-        UUID loanArticleId = UUID.randomUUID();
-        UUID breachArticleId = UUID.randomUUID();
+    void returnsEmptyWhenOriginalQueryHasNoResults() {
         FakeLawArticleRepository repository = new FakeLawArticleRepository();
-        repository.resultsByQuery.put("借款合同", List.of(newResult(
-                loanArticleId,
-                "中华人民共和国民法典",
-                "第六百七十五条",
-                "中华人民共和国民法典 > 第三编 合同 > 第十二章 借款合同 > 第六百七十五条",
-                "借款人应当按照约定的期限返还借款。",
-                new BigDecimal("42.50")
-        )));
-        repository.resultsByQuery.put("违约责任", List.of(newResult(
-                breachArticleId,
-                "中华人民共和国民法典",
-                "第五百七十七条",
-                "中华人民共和国民法典 > 第三编 合同 > 第八章 违约责任 > 第五百七十七条",
-                "当事人一方不履行合同义务或者履行合同义务不符合约定的，应当承担违约责任。",
-                new BigDecimal("38.20")
-        )));
         HybridSearchUseCase useCase = new HybridSearchUseCase(repository);
 
         List<RagSearchResult> results = useCase.search("别人欠钱不还怎么办", 5);
 
-        assertThat(repository.queries).containsExactly("别人欠钱不还怎么办", "借款合同", "违约责任", "诉讼时效");
-        assertThat(results).extracting(RagSearchResult::articleId)
-                .containsExactly(loanArticleId, breachArticleId);
-        assertThat(results).extracting(RagSearchResult::matchType)
-                .containsOnly("keyword_expansion");
+        assertThat(repository.queries).containsExactly("别人欠钱不还怎么办");
+        assertThat(results).isEmpty();
     }
 
     private static LawArticleSearchResult newResult(
@@ -101,7 +78,6 @@ class HybridSearchUseCaseTest {
 
     private static class FakeLawArticleRepository implements LawArticleRepository {
         private final List<LawArticleSearchResult> results = new ArrayList<>();
-        private final Map<String, List<LawArticleSearchResult>> resultsByQuery = new HashMap<>();
         private final List<String> queries = new ArrayList<>();
         private String lastQuery;
         private int lastLimit;
@@ -111,9 +87,6 @@ class HybridSearchUseCaseTest {
             queries.add(query);
             lastQuery = query;
             lastLimit = limit;
-            if (resultsByQuery.containsKey(query)) {
-                return resultsByQuery.get(query);
-            }
             return results;
         }
 
