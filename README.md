@@ -55,6 +55,14 @@ postgresql://law4x:law4x_dev@localhost:5432/law4x
 python3 scripts/import_law_docx.py 中华人民共和国民法典_20200528.docx --effective-date 2021-01-01
 ```
 
+## 检索样本法规
+
+```bash
+python3 scripts/search_law_articles.py 违约责任 --limit 5
+python3 scripts/search_law_articles.py 第五百七十七条 --limit 3
+python3 scripts/search_law_articles.py 借款合同 --limit 5
+```
+
 ## MVP 非目标
 
 - 不做胜诉率预测
