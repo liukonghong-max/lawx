@@ -56,6 +56,9 @@ com.law4x.rag
 │   └── HybridSearchUseCase
 ├── infrastructure
 │   ├── embedding
+│   │   ├── AgentScopeEmbeddingClient
+│   │   ├── DashScopeEmbeddingConfiguration
+│   │   ├── DashScopeEmbeddingProperties
 │   │   └── UnsupportedEmbeddingClient
 │   └── persistence
 │       └── JdbcLawArticleEmbeddingRepository
@@ -68,7 +71,7 @@ com.law4x.rag
 
 当前 `JdbcLawArticleEmbeddingRepository` 已能基于 `law_article_embeddings.embedding` 执行 pgvector cosine distance 查询，拿到 query embedding 后即可召回相似法条。
 
-当前 `GenerateMissingArticleEmbeddingsUseCase` 已能查找缺失 embedding 的现行有效法条，并将生成结果 upsert 到 `law_article_embeddings`。真实 embedding provider 尚未接入，当前 `UnsupportedEmbeddingClient` 只用于明确提示未配置。
+当前 `GenerateMissingArticleEmbeddingsUseCase` 已能查找缺失 embedding 的现行有效法条，并将生成结果 upsert 到 `law_article_embeddings`。真实 provider 使用 AgentScope Java v2 的 `DashScopeTextEmbedding` 适配 `text-embedding-v4`；未开启 DashScope 时，`UnsupportedEmbeddingClient` 会明确提示未配置。
 
 ## 3. 分层职责
 
@@ -139,7 +142,6 @@ com.law4x.rag
 
 后续可扩展：
 
-- `OpenAiEmbeddingClient`
 - `AgentScopeToolAdapter`
 
 ### `interfaces`
@@ -280,7 +282,7 @@ GET /api/rag/search?query=别人欠钱不还怎么办&limit=5
 
 建议按这个顺序推进：
 
-1. embedding 生成：`OpenAiEmbeddingClient` 或其他 embedding provider
+1. 执行批量 embedding 入库：为 `GenerateMissingArticleEmbeddingsUseCase` 暴露管理接口或命令行入口
 2. hybrid 合并：关键词结果 + 向量结果去重、合分和排序
 3. 引用校验：`ValidateCitationsUseCase`
 4. Agent tool 适配：`SearchLawArticlesTool`

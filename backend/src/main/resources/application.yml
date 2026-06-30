@@ -9,3 +9,11 @@ spring:
 
 server:
   port: 8080
+
+law4x:
+  embedding:
+    dashscope:
+      enabled: ${DASHSCOPE_EMBEDDING_ENABLED:false}
+      api-key: ${DASHSCOPE_API_KEY:}
+      model-name: ${DASHSCOPE_EMBEDDING_MODEL:text-embedding-v4}
+      dimensions: ${DASHSCOPE_EMBEDDING_DIMENSIONS:1536}

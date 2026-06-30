@@ -23,6 +23,7 @@
 - RAG 检索骨架 use case
 - pgvector 法条向量检索 repository
 - 缺失 embedding 生成 use case
+- AgentScope DashScope embedding 适配
 - PostgreSQL 检索 repository
 - REST 查询接口
 
@@ -70,6 +71,14 @@ GenerateMissingArticleEmbeddingsUseCaseTest
 - rejectsBlankEmbeddingModel
 - generatesAndStoresEmbeddingsForMissingArticles
 
+AgentScopeEmbeddingClientTest
+- embedsTextThroughAgentScopeModel
+- rejectsDifferentModelName
+
+DashScopeEmbeddingConfigurationTest
+- usesUnsupportedClientWhenDashScopeIsDisabled
+- failsFastWhenDashScopeEnabledWithoutApiKey
+
 RagSearchControllerTest
 - searchesRagEvidence
 - returnsBadRequestForBlankQuery
@@ -112,9 +121,21 @@ Parser Skill
 
 ## 5. 后续计划
 
+DashScope embedding 配置：
+
+```yaml
+law4x:
+  embedding:
+    dashscope:
+      enabled: true
+      api-key: ${DASHSCOPE_API_KEY}
+      model-name: text-embedding-v4
+      dimensions: 1536
+```
+
 下一步实现：
 
-- 真实 embedding provider 适配
+- 批量 embedding 入库接口或命令行入口
 - keyword + vector hybrid 合并
 - `RagTestService`
 - AgentScope Java v2 RAG tool
