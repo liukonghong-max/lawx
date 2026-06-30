@@ -17,7 +17,10 @@
 
 - Spring Boot 项目骨架
 - Spring Boot 应用入口
-- 后续服务分层承载点
+- DDD 分层骨架
+- 法条关键词检索 use case
+- PostgreSQL 检索 repository
+- REST 查询接口
 
 ## 3. 运行测试
 
@@ -32,6 +35,18 @@ mvn test
 ```text
 Law4xBackendApplicationTest
 - exposesSpringBootApplicationEntryPoint
+
+SearchLawArticlesUseCaseTest
+- rejectsBlankQuery
+- normalizesLimitAndDelegatesToRepository
+
+JdbcLawArticleRepositoryTest
+- findsArticleByExactArticleNumber
+- findsArticlesByChapterKeyword
+
+LawArticleSearchControllerTest
+- searchesLawArticles
+- returnsBadRequestForBlankQuery
 ```
 
 ## 4. Parser Skill 和 Java 后端的关系
@@ -66,9 +81,8 @@ Parser Skill
 
 下一步实现：
 
-- `LawArticleRepository`
-- `LawArticleSearchService`
-- keyword search Java 实现
+- `GetLawArticleDetailUseCase`
+- `HybridSearchUseCase`
 - `RagTestService`
 
 再下一步：

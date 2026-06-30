@@ -39,6 +39,10 @@
 - 实现条号搜索。
 - 实现正文关键词搜索。
 - Spring Boot 消费 `law_documents` 和 `law_articles`。
+- 按 DDD 分层实现 `law` 上下文。
+- 实现 `SearchLawArticlesUseCase`。
+- 实现 `LawArticleRepository` 端口和 PostgreSQL 适配器。
+- 实现 `GET /api/law/articles/search`。
 - 实现法规库页。
 - 实现专业检索页基础版本。
 

@@ -39,36 +39,38 @@ React 前端
 ### 模块划分
 
 ```text
-controller
-- AguiController
-- DataSourceController
-- LawDocumentController
-- RagTestController
+com.law4x
+├── law
+│   ├── domain
+│   ├── application
+│   ├── infrastructure
+│   └── interfaces
+├── rag
+│   ├── domain
+│   ├── application
+│   ├── infrastructure
+│   └── interfaces
+├── agent
+│   ├── application
+│   ├── infrastructure
+│   └── interfaces
+└── eval
+    ├── domain
+    ├── application
+    ├── infrastructure
+    └── interfaces
+```
 
-agent
-- LegalConsultationAgent
-- ProfessionalSearchAgent
-- AgentConfig
+后端采用 DDD 分层：`domain` 表达业务模型和端口，`application` 编排 use case，`infrastructure` 适配数据库、embedding、AgentScope，`interfaces` 适配 REST / AG-UI。
 
-tools
-- SearchLawArticlesTool
-- GetArticleDetailTool
-- ValidateCitationsTool
-- CheckEffectiveStatusTool
+当前已落地 `law` 上下文的法条检索链路：
 
-rag
-- HybridSearchService
-- EmbeddingService
-- RerankService
-
-law
-- LawDocumentService
-- LawArticleService
-- LawArticleSearchService
-
-eval
-- EvalCaseService
-- EvalRunService
+```text
+LawArticleSearchController
+ -> SearchLawArticlesUseCase
+ -> LawArticleRepository
+ -> JdbcLawArticleRepository
+ -> PostgreSQL
 ```
 
 ## 4. 数据库核心表
