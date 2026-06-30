@@ -1,15 +1,15 @@
 package com.law4x.common.interfaces.rest;
 
 public record ApiResponse<T>(
-        String code,
+        int code,
         String message,
         T data
 ) {
     public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>("SUCCESS", "success", data);
+        return new ApiResponse<>(ApiErrorCode.SUCCESS.code(), ApiErrorCode.SUCCESS.defaultMessage(), data);
     }
 
-    public static <T> ApiResponse<T> error(String code, String message) {
-        return new ApiResponse<>(code, message, null);
+    public static <T> ApiResponse<T> error(ApiErrorCode errorCode, String message) {
+        return new ApiResponse<>(errorCode.code(), message, null);
     }
 }

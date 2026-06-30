@@ -54,7 +54,7 @@ class LawArticleDetailControllerTest {
 
         mockMvc.perform(get("/api/law/articles/{articleId}", articleId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.message").value("success"))
                 .andExpect(jsonPath("$.data.articleId").value(articleId.toString()))
                 .andExpect(jsonPath("$.data.documentTitle").value("中华人民共和国民法典"))
@@ -68,7 +68,7 @@ class LawArticleDetailControllerTest {
     void returnsNotFoundWhenArticleDoesNotExist() throws Exception {
         mockMvc.perform(get("/api/law/articles/{articleId}", UUID.randomUUID()))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.code").value(-1))
                 .andExpect(jsonPath("$.message").value("article not found"))
                 .andExpect(jsonPath("$.data").doesNotExist());
     }

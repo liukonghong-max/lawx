@@ -12,6 +12,6 @@ public class RestExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgumentException(IllegalArgumentException exception) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("BAD_REQUEST", exception.getMessage()));
+                .body(ApiResponse.error(ApiErrorCode.FAILURE, exception.getMessage()));
     }
 }

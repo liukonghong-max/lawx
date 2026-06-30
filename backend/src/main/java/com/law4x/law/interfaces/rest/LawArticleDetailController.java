@@ -1,6 +1,7 @@
 package com.law4x.law.interfaces.rest;
 
 import com.law4x.common.interfaces.rest.ApiResponse;
+import com.law4x.common.interfaces.rest.ApiErrorCode;
 import com.law4x.law.application.GetLawArticleDetailUseCase;
 import com.law4x.law.domain.model.LawArticleDetail;
 import java.time.LocalDate;
@@ -29,7 +30,7 @@ public class LawArticleDetailController {
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity
                         .status(404)
-                        .body(ApiResponse.error("NOT_FOUND", "article not found")));
+                        .body(ApiResponse.error(ApiErrorCode.FAILURE, "article not found")));
     }
 
     public record ArticleDetailResponse(

@@ -45,9 +45,9 @@ class LawArticleSearchControllerTest {
 
         mockMvc.perform(get("/api/law/articles/search")
                         .param("query", "第五百七十七条")
-                        .param("limit", "3"))
+                .param("limit", "3"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.message").value("success"))
                 .andExpect(jsonPath("$.data.items", hasSize(1)))
                 .andExpect(jsonPath("$.data.items[0].articleId").value(articleId.toString()))
@@ -65,7 +65,7 @@ class LawArticleSearchControllerTest {
                 .param("query", " ")
                 .param("limit", "10"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.code").value(-1))
                 .andExpect(jsonPath("$.message").value("query must not be blank"))
                 .andExpect(jsonPath("$.data").doesNotExist());
     }

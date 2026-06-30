@@ -127,13 +127,16 @@ REST API 统一返回：
 
 ```json
 {
-  "code": "SUCCESS",
+  "code": 200,
   "message": "success",
   "data": {}
 }
 ```
 
-错误响应同样使用 `code/message/data`，其中 `data` 为 `null`。
+错误响应同样使用 `code/message/data`，其中 `data` 为 `null`。当前约定：
+
+- `200`：成功。
+- `-1`：失败。后续细分失败原因时，通过异常枚举扩展。
 
 ### 法条检索
 
@@ -145,7 +148,7 @@ GET /api/law/articles/search?query=第五百七十七条&limit=3
 
 ```json
 {
-  "code": "SUCCESS",
+  "code": 200,
   "message": "success",
   "data": {
     "items": [
@@ -172,7 +175,7 @@ GET /api/law/articles/{articleId}
 
 ```json
 {
-  "code": "SUCCESS",
+  "code": 200,
   "message": "success",
   "data": {
     "articleId": "00000000-0000-0000-0000-000000000000",
