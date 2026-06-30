@@ -33,7 +33,9 @@ class LawArticleSearchControllerTest {
 
     @Test
     void searchesLawArticles() throws Exception {
+        UUID articleId = UUID.randomUUID();
         lawArticleRepository.results.add(new LawArticleSearchResult(
+                articleId,
                 "中华人民共和国民法典",
                 "第五百七十七条",
                 "中华人民共和国民法典 > 第三编 合同 > 第八章 违约责任 > 第五百七十七条",
@@ -48,6 +50,7 @@ class LawArticleSearchControllerTest {
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("success"))
                 .andExpect(jsonPath("$.data.items", hasSize(1)))
+                .andExpect(jsonPath("$.data.items[0].articleId").value(articleId.toString()))
                 .andExpect(jsonPath("$.data.items[0].documentTitle").value("中华人民共和国民法典"))
                 .andExpect(jsonPath("$.data.items[0].articleNo").value("第五百七十七条"))
                 .andExpect(jsonPath("$.data.items[0].score").value(116.21));

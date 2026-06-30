@@ -27,6 +27,7 @@ class SearchLawArticlesUseCaseTest {
     void normalizesLimitAndDelegatesToRepository() {
         FakeLawArticleRepository repository = new FakeLawArticleRepository();
         repository.results.add(new LawArticleSearchResult(
+                UUID.randomUUID(),
                 "中华人民共和国民法典",
                 "第五百七十七条",
                 "中华人民共和国民法典 > 第三编 合同 > 第八章 违约责任 > 第五百七十七条",

@@ -150,6 +150,7 @@ GET /api/law/articles/search?query=第五百七十七条&limit=3
   "data": {
     "items": [
       {
+        "articleId": "00000000-0000-0000-0000-000000000000",
         "documentTitle": "中华人民共和国民法典",
         "articleNo": "第五百七十七条",
         "fullPath": "中华人民共和国民法典 > 第三编 合同 > 第八章 违约责任 > 第五百七十七条",

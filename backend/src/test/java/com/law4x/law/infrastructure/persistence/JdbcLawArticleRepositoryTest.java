@@ -41,10 +41,15 @@ class JdbcLawArticleRepositoryTest {
         List<LawArticleSearchResult> results = repository.searchEffectiveArticles("第五百七十七条", 3);
 
         assertThat(results).isNotEmpty();
+        assertThat(results.get(0).articleId()).isNotNull();
         assertThat(results.get(0).documentTitle()).isEqualTo("中华人民共和国民法典");
         assertThat(results.get(0).articleNo()).isEqualTo("第五百七十七条");
         assertThat(results.get(0).fullPath()).contains("第八章 违约责任");
         assertThat(results.get(0).preview()).contains("不履行合同义务");
+
+        Optional<LawArticleDetail> detail = repository.findArticleDetail(results.get(0).articleId());
+        assertThat(detail).isPresent();
+        assertThat(detail.get().articleNo()).isEqualTo("第五百七十七条");
     }
 
     @Test

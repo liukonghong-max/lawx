@@ -22,6 +22,7 @@ public class JdbcLawArticleRepository implements LawArticleRepository {
     public List<LawArticleSearchResult> searchEffectiveArticles(String query, int limit) {
         return jdbcClient.sql("""
                         SELECT
+                            a.id AS article_id,
                             d.title AS document_title,
                             a.article_no,
                             a.full_path,
@@ -52,6 +53,7 @@ public class JdbcLawArticleRepository implements LawArticleRepository {
                 .param("query", query)
                 .param("limit", limit)
                 .query((rs, rowNum) -> new LawArticleSearchResult(
+                        rs.getObject("article_id", UUID.class),
                         rs.getString("document_title"),
                         rs.getString("article_no"),
                         rs.getString("full_path"),
