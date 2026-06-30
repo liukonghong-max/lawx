@@ -8,6 +8,8 @@ import com.law4x.law.domain.repository.LawArticleRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class SearchLawArticlesUseCaseTest {
@@ -51,6 +53,11 @@ class SearchLawArticlesUseCaseTest {
             lastQuery = query;
             lastLimit = limit;
             return results;
+        }
+
+        @Override
+        public Optional<com.law4x.law.domain.model.LawArticleDetail> findArticleDetail(UUID articleId) {
+            return Optional.empty();
         }
     }
 }

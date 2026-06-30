@@ -1,8 +1,11 @@
 package com.law4x.law.infrastructure.persistence;
 
+import com.law4x.law.domain.model.LawArticleDetail;
 import com.law4x.law.domain.model.LawArticleSearchResult;
 import com.law4x.law.domain.repository.LawArticleRepository;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -56,5 +59,51 @@ public class JdbcLawArticleRepository implements LawArticleRepository {
                         rs.getBigDecimal("score")
                 ))
                 .list();
+    }
+
+    @Override
+    public Optional<LawArticleDetail> findArticleDetail(UUID articleId) {
+        return jdbcClient.sql("""
+                        SELECT
+                            a.id AS article_id,
+                            d.title AS document_title,
+                            d.law_type,
+                            d.issuer,
+                            d.publish_date,
+                            d.effective_date,
+                            d.status AS document_status,
+                            d.source_url,
+                            a.book_title,
+                            a.chapter_title,
+                            a.section_title,
+                            a.article_no,
+                            a.article_order,
+                            a.content,
+                            a.full_path,
+                            a.effective_status
+                        FROM law_articles a
+                        JOIN law_documents d ON d.id = a.document_id
+                        WHERE a.id = :articleId
+                        """)
+                .param("articleId", articleId)
+                .query((rs, rowNum) -> new LawArticleDetail(
+                        rs.getObject("article_id", UUID.class),
+                        rs.getString("document_title"),
+                        rs.getString("law_type"),
+                        rs.getString("issuer"),
+                        rs.getObject("publish_date", java.time.LocalDate.class),
+                        rs.getObject("effective_date", java.time.LocalDate.class),
+                        rs.getString("document_status"),
+                        rs.getString("source_url"),
+                        rs.getString("book_title"),
+                        rs.getString("chapter_title"),
+                        rs.getString("section_title"),
+                        rs.getString("article_no"),
+                        rs.getInt("article_order"),
+                        rs.getString("content"),
+                        rs.getString("full_path"),
+                        rs.getString("effective_status")
+                ))
+                .optional();
     }
 }

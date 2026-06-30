@@ -19,6 +19,7 @@
 - Spring Boot 应用入口
 - DDD 分层骨架
 - 法条关键词检索 use case
+- 法条详情 use case
 - PostgreSQL 检索 repository
 - REST 查询接口
 
@@ -40,13 +41,22 @@ SearchLawArticlesUseCaseTest
 - rejectsBlankQuery
 - normalizesLimitAndDelegatesToRepository
 
+GetLawArticleDetailUseCaseTest
+- rejectsInvalidArticleId
+- returnsArticleDetail
+
 JdbcLawArticleRepositoryTest
 - findsArticleByExactArticleNumber
 - findsArticlesByChapterKeyword
+- findsArticleDetailById
 
 LawArticleSearchControllerTest
 - searchesLawArticles
 - returnsBadRequestForBlankQuery
+
+LawArticleDetailControllerTest
+- returnsArticleDetail
+- returnsNotFoundWhenArticleDoesNotExist
 ```
 
 ## 4. Parser Skill 和 Java 后端的关系
@@ -81,7 +91,6 @@ Parser Skill
 
 下一步实现：
 
-- `GetLawArticleDetailUseCase`
 - `HybridSearchUseCase`
 - `RagTestService`
 
