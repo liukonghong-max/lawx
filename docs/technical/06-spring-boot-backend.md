@@ -20,6 +20,7 @@
 - DDD 分层骨架
 - 法条关键词检索 use case
 - 法条详情 use case
+- RAG 检索骨架 use case
 - PostgreSQL 检索 repository
 - REST 查询接口
 
@@ -57,6 +58,14 @@ LawArticleSearchControllerTest
 LawArticleDetailControllerTest
 - returnsArticleDetail
 - returnsNotFoundWhenArticleDoesNotExist
+
+HybridSearchUseCaseTest
+- rejectsBlankQuery
+- wrapsKeywordSearchAsRagResults
+
+RagSearchControllerTest
+- searchesRagEvidence
+- returnsBadRequestForBlankQuery
 ```
 
 ## 4. Parser Skill 和 Java 后端的关系
@@ -91,12 +100,8 @@ Parser Skill
 
 下一步实现：
 
-- `HybridSearchUseCase`
-- `RagTestService`
-
-再下一步：
-
 - embedding 生成
 - pgvector 查询
+- `RagTestService`
 - AgentScope Java v2 RAG tool
 - AG-UI `/ag-ui` 接口

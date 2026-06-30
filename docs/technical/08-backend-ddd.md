@@ -36,6 +36,26 @@ com.law4x.law
         └── LawArticleSearchController
 ```
 
+### `rag`
+
+负责面向 Agent 和检索测试页的证据召回。
+
+当前包结构：
+
+```text
+com.law4x.rag
+├── domain
+│   └── model
+│       └── RagSearchResult
+├── application
+│   └── HybridSearchUseCase
+└── interfaces
+    └── rest
+        └── RagSearchController
+```
+
+当前 `HybridSearchUseCase` 先复用 `LawArticleRepository` 的关键词检索能力，并将结果包装成 RAG 检索结果格式。这样前端、AgentScope tool 和检索测试页可以先对齐接口，后续再替换为真正的 keyword + vector + rerank。
+
 ## 3. 分层职责
 
 ### `domain`
@@ -47,6 +67,7 @@ com.law4x.law
 - `LawArticleSearchResult`：法条检索结果。
 - `LawArticleDetail`：完整法条、法规元数据和来源信息。
 - `LawArticleRepository`：法规库检索端口。
+- `RagSearchResult`：面向 RAG 的证据召回结果，包含命中方式、关键词分数、向量分数和最终分数。
 
 后续可扩展：
 
@@ -64,6 +85,7 @@ com.law4x.law
 
 - `GetLawArticleDetailUseCase`
 - `SearchLawArticlesUseCase`
+- `HybridSearchUseCase`
 
 职责：
 
@@ -72,11 +94,11 @@ com.law4x.law
 - 调用 `LawArticleRepository`。
 - 校验 articleId。
 - 按 articleId 获取完整法条详情。
+- 将关键词检索结果包装为 RAG 检索结果。
+- 限制 RAG 检索默认返回数量和最大返回数量。
 
 后续可扩展：
 
-- `GetLawArticleDetailUseCase`
-- `HybridSearchUseCase`
 - `ValidateCitationsUseCase`
 - `RunRagTestUseCase`
 
@@ -107,11 +129,13 @@ com.law4x.law
 
 - `LawArticleDetailController`
 - `LawArticleSearchController`
+- `RagSearchController`
 
 职责：
 
 - 提供 `GET /api/law/articles/search`。
 - 提供 `GET /api/law/articles/{articleId}`。
+- 提供 `GET /api/rag/search`。
 - 将 HTTP 参数交给 use case。
 - 将领域结果转换为 API response。
 
@@ -198,11 +222,44 @@ GET /api/law/articles/{articleId}
 }
 ```
 
+### RAG 检索
+
+```http
+GET /api/rag/search?query=别人欠钱不还怎么办&limit=5
+```
+
+当前为 RAG 骨架版本：先返回关键词召回结果，`matchType` 固定为 `keyword`，`vectorScore` 为 `0`。后续接入 embedding 和 pgvector 后，`matchType` 会扩展为 `vector` 或 `hybrid`。
+
+返回：
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "items": [
+      {
+        "articleId": "00000000-0000-0000-0000-000000000000",
+        "documentTitle": "中华人民共和国民法典",
+        "articleNo": "第六百七十五条",
+        "fullPath": "中华人民共和国民法典 > 第三编 合同 > 第十二章 借款合同 > 第六百七十五条",
+        "preview": "借款人应当按照约定的期限返还借款。",
+        "matchType": "keyword",
+        "keywordScore": 42.50,
+        "vectorScore": 0,
+        "finalScore": 42.50,
+        "reason": "当前使用关键词检索命中，后续会叠加向量召回和 rerank。"
+      }
+    ]
+  }
+}
+```
+
 ## 5. 后续建模顺序
 
 建议按这个顺序推进：
 
-1. RAG 检索：`HybridSearchUseCase`
+1. 向量底座：embedding 字段或 `article_embeddings` 表
 2. 引用校验：`ValidateCitationsUseCase`
 3. Agent tool 适配：`SearchLawArticlesTool`
 4. AG-UI 流式接口：`AguiController`
