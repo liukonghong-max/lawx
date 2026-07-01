@@ -56,6 +56,28 @@ mvn test
 
 当前 Spring Boot 后端只保留正式服务骨架。法律文件解析归入 Parser Skill / 离线导入工具，不放在核心后端里。
 
+启动后端后访问联调页：
+
+```text
+http://localhost:8080/
+```
+
+当前 `backend/src/main/resources/static/` 下的页面是联调测试页，用于验证后端接口与基础交互。
+
+正式产品前端位于：
+
+```text
+frontend/
+```
+
+启动正式 React 前端：
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
 ## 本地数据库
 
 启动 PostgreSQL + pgvector：

@@ -57,13 +57,15 @@ public class RagAnswerController {
     public record RagAnswerResponse(
             UUID runId,
             String answer,
-            List<CitationResponse> citations
+            List<CitationResponse> citations,
+            List<AnswerSegmentResponse> answerSegments
     ) {
         private static RagAnswerResponse from(RagAnswer answer) {
             return new RagAnswerResponse(
                     answer.runId(),
                     answer.answer(),
-                    answer.citations().stream().map(CitationResponse::from).toList()
+                    answer.citations().stream().map(CitationResponse::from).toList(),
+                    answer.answerSegments().stream().map(AnswerSegmentResponse::from).toList()
             );
         }
     }
@@ -82,6 +84,20 @@ public class RagAnswerController {
                     citation.articleNo(),
                     citation.fullPath(),
                     citation.quotedText()
+            );
+        }
+    }
+
+    public record AnswerSegmentResponse(
+            String id,
+            String text,
+            List<UUID> citationIds
+    ) {
+        private static AnswerSegmentResponse from(RagAnswer.AnswerSegment segment) {
+            return new AnswerSegmentResponse(
+                    segment.id(),
+                    segment.text(),
+                    segment.citationIds()
             );
         }
     }

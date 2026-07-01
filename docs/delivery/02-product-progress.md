@@ -22,6 +22,11 @@ MVP 不是 AI 律师，不输出无来源结论，不承诺诉讼结果。所有
 
 先把产品做起来，再补评测和运营闭环。
 
+说明：
+
+- `backend/src/main/resources/static/` 当前作为联调测试页保留。
+- 正式产品前端从本次开始迁移到 `React + AG-UI` 架构。
+
 当前优先级：
 
 1. 公众咨询页可用。
@@ -60,6 +65,7 @@ MVP 不是 AI 律师，不输出无来源结论，不承诺诉讼结果。所有
 - [x] Ark OpenAI-compatible LLM answer provider。
 - [x] OpenAI chat completions 请求格式：`/chat/completions`、`Bearer`、`ark-code-latest`。
 - [x] 回答 provider bean 冲突修复。
+- [x] AgentScope 风格回答宿主骨架（为 workspace / memory / skill / sandbox / plan mode 扩展预留入口）。
 
 ### 工程质量
 
@@ -71,32 +77,32 @@ MVP 不是 AI 律师，不输出无来源结论，不承诺诉讼结果。所有
 
 ### P0：产品可用闭环
 
-- [ ] Web 前端工程。
-- [ ] 公众咨询页。
-- [ ] 调用 `POST /api/rag/answer`。
-- [ ] 展示回答正文。
-- [ ] 展示 citations 引用依据。
-- [ ] 引用依据面板。
-- [ ] 引用条文详情展开。
-- [ ] 基础错误、加载、空结果状态。
-- [ ] 本地前后端联调说明。
+- [x] Web 前端工程。
+- [x] 公众咨询页。
+- [x] 调用 `POST /api/rag/answer`。
+- [x] 展示回答正文。
+- [x] 展示 citations 引用依据。
+- [x] 引用依据面板。
+- [x] 引用条文详情展开。
+- [x] 基础错误、加载、空结果状态。
+- [x] 本地前后端联调说明。
 
 ### P1：专业用户功能
 
-- [ ] 专业检索页。
-- [ ] 调用 `GET /api/law/articles/search` 和 `/api/rag/search`。
+- [x] 专业检索页。
+- [x] 调用 `GET /api/law/articles/search` 和 `/api/rag/search`。
 - [ ] 检索结果显示命中方式和相关度。
-- [ ] 已选依据清单。
-- [ ] 复制法律依据。
-- [ ] 导出 Markdown。
-- [ ] 生成法律依据段落。
+- [x] 已选依据清单。
+- [x] 复制法律依据。
+- [x] 导出 Markdown。
+- [x] 生成法律依据段落。
 
 ### P1：法规库浏览
 
 - [ ] 法规库页。
 - [ ] 法条详情页或详情抽屉。
 - [ ] 按法规、章节、条号浏览。
-- [ ] 从 citation 跳转到原文条文。
+- [x] 从 citation 跳转到原文条文。
 
 ### P2：流式和 Agent 编排
 
@@ -121,20 +127,17 @@ MVP 不是 AI 律师，不输出无来源结论，不承诺诉讼结果。所有
 当前应做：
 
 ```text
-搭建 Web 前端
- -> 做公众咨询页
- -> 调用 /api/rag/answer
- -> 展示回答和引用依据
+迁移正式 React 前端
+ -> 建立 frontend/ 工程骨架
+ -> 迁移公众咨询页
+ -> 为 AG-UI 流式体验预留工作台结构
 ```
 
 验收标准：
 
-- 用户打开本地前端页面后，能输入 `别人欠钱不还怎么办`。
-- 页面能调用后端 `/api/rag/answer`。
-- 页面能显示回答正文。
-- 页面能显示至少一个引用依据。
-- 引用依据显示法规名、条号、章节路径、摘录。
-- 后端报错或无结果时有可理解的提示。
+- `frontend/` 可独立启动。
+- React 前端可调用 `/api/rag/answer` 并展示回答与引用。
+- 正式前端结构与后续 AG-UI 工作台兼容。
 
 ## 6. 后续推进规则
 

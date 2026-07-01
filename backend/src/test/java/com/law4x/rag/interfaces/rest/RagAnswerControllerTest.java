@@ -41,6 +41,11 @@ class RagAnswerControllerTest {
                         "第六百七十六条",
                         "中华人民共和国民法典 > 第三编 合同 > 第十二章 借款合同 > 第六百七十六条",
                         "借款人未按照约定的期限返还借款的，应当按照约定或者国家有关规定支付逾期利息。"
+                )),
+                List.of(new RagAnswer.AnswerSegment(
+                        "seg-1",
+                        "可以要求对方返还借款，并结合证据主张逾期利息。",
+                        List.of(articleId)
                 ))
         );
 
@@ -60,7 +65,10 @@ class RagAnswerControllerTest {
                 .andExpect(jsonPath("$.data.answer").value("可以要求对方返还借款，并结合证据主张逾期利息。"))
                 .andExpect(jsonPath("$.data.citations[0].articleId").value(articleId.toString()))
                 .andExpect(jsonPath("$.data.citations[0].documentTitle").value("中华人民共和国民法典"))
-                .andExpect(jsonPath("$.data.citations[0].articleNo").value("第六百七十六条"));
+                .andExpect(jsonPath("$.data.citations[0].articleNo").value("第六百七十六条"))
+                .andExpect(jsonPath("$.data.answerSegments[0].id").value("seg-1"))
+                .andExpect(jsonPath("$.data.answerSegments[0].text").value("可以要求对方返还借款，并结合证据主张逾期利息。"))
+                .andExpect(jsonPath("$.data.answerSegments[0].citationIds[0]").value(articleId.toString()));
 
         org.assertj.core.api.Assertions.assertThat(createRagAnswerUseCase.query)
                 .isEqualTo("别人欠钱不还怎么办");

@@ -88,10 +88,10 @@ class CreateRagAnswerUseCaseTest {
         private String answer = "测试回答";
 
         @Override
-        public String answer(String question, List<RagSearchResult> evidence) {
+        public RagAnswerClient.RagAnswerPayload answer(String question, List<RagSearchResult> evidence) {
             this.question = question;
             this.evidence = evidence;
-            return answer;
+            return new RagAnswerClient.RagAnswerPayload(answer);
         }
     }
 }
