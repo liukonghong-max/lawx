@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.law4x.law.domain.model.LawArticleDetail;
+import com.law4x.law.domain.model.LawDocumentArticleItem;
+import com.law4x.law.domain.model.LawDocumentSummary;
 import com.law4x.law.domain.model.LawArticleSearchResult;
 import com.law4x.law.domain.repository.LawArticleRepository;
 import java.time.LocalDate;
@@ -57,6 +59,16 @@ class GetLawArticleDetailUseCaseTest {
     private static class FakeLawArticleRepository implements LawArticleRepository {
         private Optional<LawArticleDetail> detail = Optional.empty();
         private UUID lastArticleId;
+
+        @Override
+        public List<LawDocumentSummary> listEffectiveDocuments(int limit) {
+            return List.of();
+        }
+
+        @Override
+        public PagedResult<LawDocumentArticleItem> listDocumentArticles(UUID documentId, int page, int pageSize) {
+            return new PagedResult<>(List.of(), page, pageSize, 0);
+        }
 
         @Override
         public List<LawArticleSearchResult> searchEffectiveArticles(String query, int limit) {

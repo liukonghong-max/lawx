@@ -4,6 +4,7 @@ import { useProfessionalSearch } from "./useProfessionalSearch";
 export default function ProfessionalSearchPage() {
     const [query, setQuery] = useState("房东不退押金怎么办");
     const [statusMessage, setStatusMessage] = useState("");
+    const [activeTab, setActiveTab] = useState("law");
     const {
         loading,
         error,
@@ -76,6 +77,8 @@ export default function ProfessionalSearchPage() {
         setStatusMessage("已导出 Markdown。");
     }
 
+    const activeItems = activeTab === "law" ? lawItems : ragItems;
+
     return (
         <div className="search-layout-react">
             <section className="search-main-panel">
@@ -119,27 +122,40 @@ export default function ProfessionalSearchPage() {
                         </div>
                     </div>
 
-                    <div className="search-results-grid-react">
-                        <ResultColumn
-                            title="法条检索"
-                            eyebrow="Keyword"
-                            items={lawItems}
-                            source="law"
-                            emptyTitle={loading ? "关键词检索中" : "等待检索"}
-                            emptyMessage={loading ? "正在查询法条库。" : "这里会显示按法条关键词命中的结果。"}
-                            isSelected={isSelected}
-                            onToggle={toggleEvidence}
-                        />
-                        <ResultColumn
-                            title="RAG 检索"
-                            eyebrow="Hybrid"
-                            items={ragItems}
-                            source="rag"
-                            emptyTitle={loading ? "Hybrid 检索中" : "等待检索"}
-                            emptyMessage={loading ? "正在融合关键词和向量结果。" : "这里会显示关键词和向量融合后的结果。"}
-                            isSelected={isSelected}
-                            onToggle={toggleEvidence}
-                        />
+                    <div className="search-tabs">
+                        <button
+                            type="button"
+                            className={`search-tab ${activeTab === "law" ? "active" : ""}`}
+                            onClick={() => setActiveTab("law")}
+                        >
+                            法条检索
+                            <span className="search-tab-count">{lawItems.length}</span>
+                        </button>
+                        <button
+                            type="button"
+                            className={`search-tab ${activeTab === "rag" ? "active" : ""}`}
+                            onClick={() => setActiveTab("rag")}
+                        >
+                            RAG 检索
+                            <span className="search-tab-count">{ragItems.length}</span>
+                        </button>
+                    </div>
+                    <ResultTable
+                        items={activeItems}
+                        source={activeTab}
+                        loading={loading}
+                        emptyTitle={activeTab === "law"
+                            ? (loading ? "关键词检索中" : "等待检索")
+                            : (loading ? "Hybrid 检索中" : "等待检索")}
+                        emptyMessage={activeTab === "law"
+                            ? (loading ? "正在查询法条库。" : "这里会显示按法条关键词命中的结果。")
+                            : (loading ? "正在融合关键词和向量结果。" : "这里会显示关键词和向量融合后的结果。")}
+                        isSelected={isSelected}
+                        onToggle={toggleEvidence}
+                    />
+                    <div className="search-score-note">
+                        <span className="badge">说明</span>
+                        <span>Hybrid 结果展示命中方式、综合分、关键词分和语义分，便于判断依据来源与稳定性。</span>
                     </div>
                 </section>
             </section>
@@ -188,55 +204,74 @@ export default function ProfessionalSearchPage() {
     );
 }
 
-function ResultColumn({ title, eyebrow, items, source, emptyTitle, emptyMessage, isSelected, onToggle }) {
+function ResultTable({ items, source, loading, emptyTitle, emptyMessage, isSelected, onToggle }) {
     return (
-        <section className="search-result-panel-react">
-            <div className="panel-heading panel-heading-light">
-                <p className="eyebrow">{eyebrow}</p>
-                <h2>{title}</h2>
+        <div className="search-table-shell">
+            <div className="search-table-header">
+                <div>选择</div>
+                <div>法规与条号</div>
+                <div>命中方式</div>
+                <div>{source === "rag" ? "分数" : "相关度"}</div>
+                <div>摘要</div>
             </div>
-            <div className="result-list-react">
+            <div className="search-table-body">
                 {items.length ? (
-                    items.map((item, index) => {
-                        const scoreLabel = source === "rag"
-                            ? `综合 ${formatScore(item.finalScore)}`
-                            : `相关度 ${formatScore(item.score)}`;
-                        return (
-                            <article key={`${source}-${item.articleId || index}`} className="result-card">
+                    items.map((item, index) => (
+                        <div key={`${source}-${item.articleId || index}`} className="search-table-row">
+                            <div className="search-table-cell search-table-cell-check">
                                 <label className="result-select">
                                     <input
                                         type="checkbox"
                                         checked={isSelected(source, item.articleId)}
                                         onChange={() => onToggle(source, item)}
                                     />
-                                    <span>加入依据</span>
+                                    <span>加入</span>
                                 </label>
-                                <div className="citation-title">
-                                    <strong>
-                                        <span className="citation-index">[{index + 1}]</span> {item.documentTitle || "未知法规"}
-                                    </strong>
+                            </div>
+                            <div className="search-table-cell">
+                                <div className="search-table-title">
+                                    <strong>{item.documentTitle || "未知法规"}</strong>
                                     <span>{item.articleNo || ""}</span>
                                 </div>
-                                <div className="answer-meta compact-badges">
-                                    <span className="badge">{source === "rag" ? item.matchType || "unknown" : "keyword"}</span>
-                                    <span className="badge">{scoreLabel}</span>
+                                <p className="search-table-path">{item.fullPath || "暂无章节路径"}</p>
+                            </div>
+                            <div className="search-table-cell">
+                                <div className="compact-badges">
+                                    <span className="badge">{source === "rag" ? "Hybrid" : "Keyword"}</span>
+                                    <span className="badge">
+                                        {source === "rag" ? formatMatchType(item.matchType) : "条文关键词"}
+                                    </span>
                                 </div>
-                                <p className="citation-path">{item.fullPath || "暂无章节路径"}</p>
-                                <p className="citation-preview">{item.preview || "暂无摘录"}</p>
+                            </div>
+                            <div className="search-table-cell">
+                                {source === "rag" ? (
+                                    <div className="search-table-score-list">
+                                        <span>综合 {formatScore(item.finalScore)}</span>
+                                        <span>关键词 {formatScore(item.keywordScore)}</span>
+                                        <span>语义 {formatScore(item.vectorScore)}</span>
+                                    </div>
+                                ) : (
+                                    <div className="search-table-score-list">
+                                        <span>相关度 {formatScore(item.score)}</span>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="search-table-cell">
+                                <p className="search-table-preview">{item.preview || "暂无摘录"}</p>
                                 {source === "rag" && item.reason ? (
-                                    <p className="result-reason">{item.reason}</p>
+                                    <p className="search-table-reason">{item.reason}</p>
                                 ) : null}
-                            </article>
-                        );
-                    })
+                            </div>
+                        </div>
+                    ))
                 ) : (
                     <div className="empty-state compact">
-                        <strong>{emptyTitle}</strong>
+                        <strong>{loading ? emptyTitle : emptyTitle}</strong>
                         <p>{emptyMessage}</p>
                     </div>
                 )}
             </div>
-        </section>
+        </div>
     );
 }
 
@@ -274,6 +309,19 @@ function downloadTextFile(filename, content) {
     link.download = filename;
     link.click();
     URL.revokeObjectURL(url);
+}
+
+function formatMatchType(value) {
+    switch (value) {
+        case "hybrid":
+            return "关键词 + 语义";
+        case "vector":
+            return "语义召回";
+        case "keyword":
+            return "关键词";
+        default:
+            return value || "未知";
+    }
 }
 
 function formatScore(value) {

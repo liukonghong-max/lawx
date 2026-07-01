@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.law4x.law.domain.model.LawArticleSearchResult;
+import com.law4x.law.domain.model.LawDocumentArticleItem;
+import com.law4x.law.domain.model.LawDocumentSummary;
 import com.law4x.law.domain.repository.LawArticleRepository;
 import com.law4x.rag.application.HybridSearchUseCase;
 import com.law4x.rag.domain.model.RagSearchResult;
@@ -126,6 +128,16 @@ class RagSearchControllerTest {
 
     static class FakeLawArticleRepository implements LawArticleRepository {
         private final List<LawArticleSearchResult> results = new ArrayList<>();
+
+        @Override
+        public List<LawDocumentSummary> listEffectiveDocuments(int limit) {
+            return List.of();
+        }
+
+        @Override
+        public PagedResult<LawDocumentArticleItem> listDocumentArticles(UUID documentId, int page, int pageSize) {
+            return new PagedResult<>(List.of(), page, pageSize, 0);
+        }
 
         @Override
         public List<LawArticleSearchResult> searchEffectiveArticles(String query, int limit) {

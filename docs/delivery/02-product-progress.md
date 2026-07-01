@@ -61,17 +61,20 @@ MVP 不是 AI 律师，不输出无来源结论，不承诺诉讼结果。所有
 
 - [x] `/api/rag/test-runs` 保存检索快照。
 - [x] `/api/rag/answer` 基于检索证据生成回答和 citations。
-- [x] 默认抽取式 fallback answer。
-- [x] Ark OpenAI-compatible LLM answer provider。
-- [x] OpenAI chat completions 请求格式：`/chat/completions`、`Bearer`、`ark-code-latest`。
-- [x] 回答 provider bean 冲突修复。
-- [x] AgentScope 风格回答宿主骨架（为 workspace / memory / skill / sandbox / plan mode 扩展预留入口）。
+- [x] 回答链路统一收敛到 AgentScope。
+- [x] 旧的 fallback / 多 provider 适配代码已删除。
+- [x] 当前基于 AgentScope `ReActAgent` 驱动问答。
+- [x] 已为 workspace / memory / skill / sandbox / plan mode 预留宿主骨架。
+- [x] 已接入 structured output 约束，当前采用 `json_object + middleware + 严格解析`。
 
 ### 工程质量
 
 - [x] AgentScope Java v2.0.0-RC3 依赖校准。
 - [x] 后端单元测试和集成测试覆盖主要 use case。
-- [x] 当前后端测试通过：`mvn test`，46 tests。
+- [x] 当前问答主链路相关测试通过：
+  - `AgentScopeRagAnswerClientTest`
+  - `AgentScopeAnswerConfigurationTest`
+  - `CreateRagAnswerUseCaseTest`
 
 ## 4. 未完成能力
 
@@ -91,7 +94,7 @@ MVP 不是 AI 律师，不输出无来源结论，不承诺诉讼结果。所有
 
 - [x] 专业检索页。
 - [x] 调用 `GET /api/law/articles/search` 和 `/api/rag/search`。
-- [ ] 检索结果显示命中方式和相关度。
+- [x] 检索结果显示命中方式和相关度。
 - [x] 已选依据清单。
 - [x] 复制法律依据。
 - [x] 导出 Markdown。
@@ -99,9 +102,9 @@ MVP 不是 AI 律师，不输出无来源结论，不承诺诉讼结果。所有
 
 ### P1：法规库浏览
 
-- [ ] 法规库页。
-- [ ] 法条详情页或详情抽屉。
-- [ ] 按法规、章节、条号浏览。
+- [x] 法规库页。
+- [x] 法条详情页或详情抽屉。
+- [x] 按法规、章节、条号浏览。
 - [x] 从 citation 跳转到原文条文。
 
 ### P2：流式和 Agent 编排
@@ -127,17 +130,17 @@ MVP 不是 AI 律师，不输出无来源结论，不承诺诉讼结果。所有
 当前应做：
 
 ```text
-迁移正式 React 前端
- -> 建立 frontend/ 工程骨架
- -> 迁移公众咨询页
- -> 为 AG-UI 流式体验预留工作台结构
+进入 P2
+ -> AG-UI `/ag-ui` 接口
+ -> SSE 流式回答
+ -> AgentScope tool：searchLawArticles / getArticleDetail / validateCitations
 ```
 
 验收标准：
 
-- `frontend/` 可独立启动。
-- React 前端可调用 `/api/rag/answer` 并展示回答与引用。
-- 正式前端结构与后续 AG-UI 工作台兼容。
+- `/ag-ui` 能承接正式前端后续工作台接入。
+- 回答过程支持流式返回。
+- AgentScope RAG tools 形成后续 Agent 编排基础能力。
 
 ## 6. 后续推进规则
 

@@ -3,11 +3,12 @@ import { useState } from "react";
 import Sidebar from "./Sidebar";
 import ConsultationPage from "../features/consultation/ConsultationPage";
 import ProfessionalSearchPage from "../features/search/ProfessionalSearchPage";
+import LawLibraryPage from "../features/library/LawLibraryPage";
 
 const views = [
     { id: "consultation", label: "法律咨询", status: "active" },
     { id: "search", label: "专业检索", status: "active" },
-    { id: "library", label: "法规库", status: "pending" }
+    { id: "library", label: "法规库", status: "active" }
 ];
 
 export default function AppShell() {
@@ -18,9 +19,11 @@ export default function AppShell() {
             <Sidebar items={views} activeView={activeView} onChange={setActiveView} />
             <main className="workspace">
                 {activeView === "consultation" ? (
-                    <ConsultationPage activeView={activeView} views={views} onModeChange={setActiveView} />
+                    <ConsultationPage />
                 ) : activeView === "search" ? (
-                    <ProfessionalSearchPage activeView={activeView} views={views} onModeChange={setActiveView} />
+                    <ProfessionalSearchPage />
+                ) : activeView === "library" ? (
+                    <LawLibraryPage />
                 ) : (
                     <section className="workspace-placeholder-page">
                         <div className="workspace-heading">

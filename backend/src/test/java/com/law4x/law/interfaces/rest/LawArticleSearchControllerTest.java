@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.law4x.law.application.SearchLawArticlesUseCase;
+import com.law4x.law.domain.model.LawDocumentArticleItem;
+import com.law4x.law.domain.model.LawDocumentSummary;
 import com.law4x.law.domain.model.LawArticleSearchResult;
 import com.law4x.law.domain.repository.LawArticleRepository;
 import java.math.BigDecimal;
@@ -87,6 +89,16 @@ class LawArticleSearchControllerTest {
         private final List<LawArticleSearchResult> results = new ArrayList<>();
         private String lastQuery;
         private int lastLimit;
+
+        @Override
+        public List<LawDocumentSummary> listEffectiveDocuments(int limit) {
+            return List.of();
+        }
+
+        @Override
+        public PagedResult<LawDocumentArticleItem> listDocumentArticles(UUID documentId, int page, int pageSize) {
+            return new PagedResult<>(List.of(), page, pageSize, 0);
+        }
 
         @Override
         public List<LawArticleSearchResult> searchEffectiveArticles(String query, int limit) {

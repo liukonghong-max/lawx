@@ -1,6 +1,8 @@
 package com.law4x.law.infrastructure.persistence;
 
 import com.law4x.law.domain.model.LawArticleDetail;
+import com.law4x.law.domain.model.LawDocumentArticleItem;
+import com.law4x.law.domain.model.LawDocumentSummary;
 import com.law4x.law.domain.model.LawArticleSearchResult;
 import com.law4x.law.domain.repository.LawArticleRepository;
 import java.util.List;
@@ -16,6 +18,88 @@ public class JdbcLawArticleRepository implements LawArticleRepository {
 
     public JdbcLawArticleRepository(JdbcClient jdbcClient) {
         this.jdbcClient = jdbcClient;
+    }
+
+    @Override
+    public List<LawDocumentSummary> listEffectiveDocuments(int limit) {
+        return jdbcClient.sql("""
+                        SELECT
+                            d.id AS document_id,
+                            d.title,
+                            d.law_type,
+                            d.issuer,
+                            d.publish_date,
+                            d.effective_date,
+                            d.status,
+                            COUNT(a.id) AS article_count
+                        FROM law_documents d
+                        JOIN law_articles a ON a.document_id = d.id
+                        WHERE d.status = 'effective'
+                        GROUP BY d.id, d.title, d.law_type, d.issuer, d.publish_date, d.effective_date, d.status
+                        ORDER BY d.effective_date DESC NULLS LAST, d.updated_at DESC
+                        LIMIT :limit
+                        """)
+                .param("limit", limit)
+                .query((rs, rowNum) -> new LawDocumentSummary(
+                        rs.getObject("document_id", UUID.class),
+                        rs.getString("title"),
+                        rs.getString("law_type"),
+                        rs.getString("issuer"),
+                        rs.getObject("publish_date", java.time.LocalDate.class),
+                        rs.getObject("effective_date", java.time.LocalDate.class),
+                        rs.getString("status"),
+                        rs.getInt("article_count")
+                ))
+                .list();
+    }
+
+    @Override
+    public PagedResult<LawDocumentArticleItem> listDocumentArticles(UUID documentId, int page, int pageSize) {
+        Long total = jdbcClient.sql("""
+                        SELECT COUNT(*)
+                        FROM law_articles a
+                        JOIN law_documents d ON d.id = a.document_id
+                        WHERE a.document_id = :documentId
+                          AND d.status = 'effective'
+                        """)
+                .param("documentId", documentId)
+                .query(Long.class)
+                .single();
+        List<LawDocumentArticleItem> items = jdbcClient.sql("""
+                        SELECT
+                            a.id AS article_id,
+                            a.book_title,
+                            a.chapter_title,
+                            a.section_title,
+                            a.article_no,
+                            a.article_order,
+                            a.content,
+                            a.full_path,
+                            a.effective_status
+                        FROM law_articles a
+                        JOIN law_documents d ON d.id = a.document_id
+                        WHERE a.document_id = :documentId
+                          AND d.status = 'effective'
+                        ORDER BY a.article_order ASC
+                        LIMIT :limit
+                        OFFSET :offset
+                        """)
+                .param("documentId", documentId)
+                .param("limit", pageSize)
+                .param("offset", (page - 1) * pageSize)
+                .query((rs, rowNum) -> new LawDocumentArticleItem(
+                        rs.getObject("article_id", UUID.class),
+                        rs.getString("book_title"),
+                        rs.getString("chapter_title"),
+                        rs.getString("section_title"),
+                        rs.getString("article_no"),
+                        rs.getInt("article_order"),
+                        rs.getString("content"),
+                        rs.getString("full_path"),
+                        rs.getString("effective_status")
+                ))
+                .list();
+        return new PagedResult<>(items, page, pageSize, total == null ? 0 : total);
     }
 
     @Override

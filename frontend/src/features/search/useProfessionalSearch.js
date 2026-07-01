@@ -76,8 +76,10 @@ function buildEvidenceRecord(source, item) {
     return {
         key: buildEvidenceKey(source, item.articleId),
         source,
-        sourceLabel: source === "rag" ? `hybrid / ${item.matchType || "unknown"}` : "keyword",
-        scoreLabel: source === "rag" ? `综合 ${formatScore(item.finalScore)}` : `相关度 ${formatScore(item.score)}`,
+        sourceLabel: source === "rag" ? `Hybrid / ${formatMatchType(item.matchType)}` : "Keyword / 条文检索",
+        scoreLabel: source === "rag"
+            ? `综合 ${formatScore(item.finalScore)} · 关键词 ${formatScore(item.keywordScore)} · 语义 ${formatScore(item.vectorScore)}`
+            : `相关度 ${formatScore(item.score)}`,
         documentTitle: item.documentTitle || "未知法规",
         articleNo: item.articleNo || "",
         fullPath: item.fullPath || "暂无章节路径",
@@ -94,4 +96,17 @@ function formatScore(value) {
         return String(value);
     }
     return numericValue.toFixed(2);
+}
+
+function formatMatchType(value) {
+    switch (value) {
+        case "hybrid":
+            return "关键词 + 语义";
+        case "vector":
+            return "语义召回";
+        case "keyword":
+            return "关键词";
+        default:
+            return value || "未知";
+    }
 }

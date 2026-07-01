@@ -10,7 +10,7 @@ const examples = [
 
 const answerActions = ["复制", "有用", "无用", "分享"];
 
-export default function ConsultationPage({ activeView, views, onModeChange }) {
+export default function ConsultationPage() {
     const [query, setQuery] = useState("别人欠钱不还怎么办");
     const [submittedQuery, setSubmittedQuery] = useState("");
     const [openedId, setOpenedId] = useState("");
@@ -123,20 +123,10 @@ export default function ConsultationPage({ activeView, views, onModeChange }) {
         <div className="consultation-layout">
             <section className="conversation-shell">
                 <div className="conversation-toolbar">
-                    <div className="mode-switcher">
-                        <span className="mode-label">模式切换：</span>
-                        <div className="mode-tabs">
-                            {views.filter((item) => item.status === "active").map((item) => (
-                                <button
-                                    key={item.id}
-                                    type="button"
-                                    className={`mode-tab ${activeView === item.id ? "active" : ""}`}
-                                    onClick={() => onModeChange(item.id)}
-                                >
-                                    {item.label}
-                                </button>
-                            ))}
-                        </div>
+                    <div className="workspace-heading workspace-heading-compact">
+                        <p className="eyebrow">法律咨询</p>
+                        <h1>基于法条依据的问答</h1>
+                        <p className="summary">围绕具体法律问题生成带依据的回答，并在右侧同步展开引用条文。</p>
                     </div>
                     <div className="toolbar-meta">
                         <span className="toolbar-hint">案例咨询</span>

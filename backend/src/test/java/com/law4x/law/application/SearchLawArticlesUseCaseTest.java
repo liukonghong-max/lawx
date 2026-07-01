@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.law4x.law.domain.model.LawArticleSearchResult;
+import com.law4x.law.domain.model.LawDocumentArticleItem;
+import com.law4x.law.domain.model.LawDocumentSummary;
 import com.law4x.law.domain.repository.LawArticleRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -48,6 +50,16 @@ class SearchLawArticlesUseCaseTest {
         private final List<LawArticleSearchResult> results = new ArrayList<>();
         private String lastQuery;
         private int lastLimit;
+
+        @Override
+        public List<LawDocumentSummary> listEffectiveDocuments(int limit) {
+            return List.of();
+        }
+
+        @Override
+        public PagedResult<LawDocumentArticleItem> listDocumentArticles(UUID documentId, int page, int pageSize) {
+            return new PagedResult<>(List.of(), page, pageSize, 0);
+        }
 
         @Override
         public List<LawArticleSearchResult> searchEffectiveArticles(String query, int limit) {
