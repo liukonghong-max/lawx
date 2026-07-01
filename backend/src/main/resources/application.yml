@@ -13,7 +13,13 @@ server:
 law4x:
   embedding:
     dashscope:
-      enabled: ${DASHSCOPE_EMBEDDING_ENABLED:false}
-      api-key: ${DASHSCOPE_API_KEY:}
+      enabled: ${DASHSCOPE_EMBEDDING_ENABLED:true}
+      api-key: ${DASHSCOPE_API_KEY:sk-2a7e4c8417ef4ec486d4ea3215afc1ba}
       model-name: ${DASHSCOPE_EMBEDDING_MODEL:text-embedding-v4}
       dimensions: ${DASHSCOPE_EMBEDDING_DIMENSIONS:1536}
+  answer:
+    openai:
+      enabled: ${ARK_ANSWER_ENABLED:true}
+      api-key: ${ARK_API_KEY:ark-c283855c-da17-4601-9320-61123b0611c8-06cb6}
+      base-url: ${ARK_BASE_URL:https://ark.cn-beijing.volces.com/api/coding/v3}
+      model-name: ${ARK_MODEL:ark-code-latest}

@@ -28,6 +28,7 @@ lawx 的 MVP 目标是打通法律法规 RAG Agent 的最小闭环：
 - `docs/technical/06-spring-boot-backend.md`：Spring Boot 后端说明
 - `docs/technical/07-legal-parser-skill.md`：法律文件解析 Skill 设计
 - `docs/delivery/01-implementation-plan.md`：MVP 实现计划
+- `docs/delivery/02-product-progress.md`：MVP 产品实时进度看板
 - `中华人民共和国民法典_20200528.docx`：第一条法规导入样本
 
 ## 技术方向

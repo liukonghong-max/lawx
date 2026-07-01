@@ -19,6 +19,7 @@
 
     <properties>
         <java.version>17</java.version>
+        <agentscope.version>2.0.0-RC3</agentscope.version>
     </properties>
 
     <dependencies>
@@ -37,7 +38,7 @@
         <dependency>
             <groupId>io.agentscope</groupId>
             <artifactId>agentscope-extensions-rag-simple</artifactId>
-            <version>1.0.12</version>
+            <version>${agentscope.version}</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
