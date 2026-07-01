@@ -79,9 +79,11 @@ com.law4x.rag
 ```text
 POST /api/admin/rag/embeddings/generate?limit=20
 POST /api/admin/rag/embeddings/generate?embeddingModel=text-embedding-v4&limit=20
+POST /api/admin/rag/embeddings/generate-all?batchSize=100&maxBatches=50
+POST /api/admin/rag/embeddings/generate-all?embeddingModel=text-embedding-v4&batchSize=100&maxBatches=50
 ```
 
-该入口仅用于开发期和内部管理操作，正式对外前需要增加鉴权和操作审计。
+`generate` 只执行单批，适合试跑；`generate-all` 会分批循环直到没有缺失数据，或达到 `maxBatches`。这些入口仅用于开发期和内部管理操作，正式对外前需要增加鉴权和操作审计。
 
 ## 3. 分层职责
 

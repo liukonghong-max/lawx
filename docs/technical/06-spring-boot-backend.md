@@ -143,6 +143,14 @@ curl --location --request POST 'localhost:8080/api/admin/rag/embeddings/generate
 
 该接口会查找当前模型缺失 embedding 的法条，调用 `GenerateMissingArticleEmbeddingsUseCase` 写入 `law_article_embeddings`。先用较小 `limit` 试跑，确认费用和数据写入正常后再放大。
 
+本地全量分批入库：
+
+```bash
+curl --location --request POST 'localhost:8080/api/admin/rag/embeddings/generate-all?batchSize=100&maxBatches=50'
+```
+
+`generate-all` 会循环执行单批生成，直到没有缺失 embedding 的法条，或达到 `maxBatches`。返回里的 `finished=true` 表示本轮已确认没有缺失数据；`finished=false` 表示达到批次数上限，可以继续调用。
+
 下一步实现：
 
 - keyword + vector hybrid 合并
