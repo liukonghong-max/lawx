@@ -133,9 +133,18 @@ law4x:
       dimensions: 1536
 ```
 
+本地小批量入库：
+
+```bash
+export DASHSCOPE_EMBEDDING_ENABLED=true
+export DASHSCOPE_API_KEY=你的DashScopeKey
+curl --location --request POST 'localhost:8080/api/admin/rag/embeddings/generate?limit=20'
+```
+
+该接口会查找当前模型缺失 embedding 的法条，调用 `GenerateMissingArticleEmbeddingsUseCase` 写入 `law_article_embeddings`。先用较小 `limit` 试跑，确认费用和数据写入正常后再放大。
+
 下一步实现：
 
-- 批量 embedding 入库接口或命令行入口
 - keyword + vector hybrid 合并
 - `RagTestService`
 - AgentScope Java v2 RAG tool

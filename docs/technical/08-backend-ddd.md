@@ -64,6 +64,7 @@ com.law4x.rag
 │       └── JdbcLawArticleEmbeddingRepository
 └── interfaces
     └── rest
+        ├── RagEmbeddingAdminController
         └── RagSearchController
 ```
 
@@ -72,6 +73,15 @@ com.law4x.rag
 当前 `JdbcLawArticleEmbeddingRepository` 已能基于 `law_article_embeddings.embedding` 执行 pgvector cosine distance 查询，拿到 query embedding 后即可召回相似法条。
 
 当前 `GenerateMissingArticleEmbeddingsUseCase` 已能查找缺失 embedding 的现行有效法条，并将生成结果 upsert 到 `law_article_embeddings`。真实 provider 使用 AgentScope Java v2 的 `DashScopeTextEmbedding` 适配 `text-embedding-v4`；未开启 DashScope 时，`UnsupportedEmbeddingClient` 会明确提示未配置。
+
+当前 `RagEmbeddingAdminController` 暴露本地批量入库入口：
+
+```text
+POST /api/admin/rag/embeddings/generate?limit=20
+POST /api/admin/rag/embeddings/generate?embeddingModel=text-embedding-v4&limit=20
+```
+
+该入口仅用于开发期和内部管理操作，正式对外前需要增加鉴权和操作审计。
 
 ## 3. 分层职责
 
