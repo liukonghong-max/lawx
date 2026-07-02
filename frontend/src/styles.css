@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
     color-scheme: light;
     --bg: #f3f5f4;
@@ -16,6 +18,24 @@
     --danger: #d36f1c;
     --danger-soft: #fff6ee;
     --shadow: 0 16px 40px rgba(17, 33, 28, 0.08);
+    --background: #f3f5f4;
+    --foreground: #202422;
+    --card: #ffffff;
+    --card-foreground: #202422;
+    --popover: #ffffff;
+    --popover-foreground: #202422;
+    --primary-foreground: #ffffff;
+    --secondary: #ebf5f2;
+    --secondary-foreground: #0f6762;
+    --muted-foreground: #7a817d;
+    --accent: #fff6ea;
+    --accent-foreground: #7d4b08;
+    --destructive: #d36f1c;
+    --destructive-foreground: #ffffff;
+    --border: #e3e8e5;
+    --input: #e3e8e5;
+    --ring: #0f6762;
+    --radius: 1rem;
 }
 
 * {
@@ -213,6 +233,13 @@ textarea {
     padding: 18px 18px 20px;
 }
 
+.conversation-shell {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 36px);
+    min-height: 0;
+}
+
 .reference-panel,
 .search-selection-panel {
     padding: 18px 18px 20px;
@@ -382,6 +409,66 @@ textarea {
     border-radius: 16px;
     background: linear-gradient(180deg, #ffffff 0%, #fdfefe 100%);
     overflow: hidden;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.conversation-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #eef2ef;
+    background: #fbfcfb;
+}
+
+.conversation-status-copy,
+.toolbar-action-inline {
+    display: flex;
+}
+
+.conversation-status-copy {
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.conversation-status-text {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.agui-chat-shell {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.agui-conversation {
+    height: 100%;
+    min-height: 420px;
+    background:
+        linear-gradient(180deg, rgba(248, 251, 250, 0.55) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.agui-conversation-content {
+    gap: 18px;
+    padding: 18px;
+}
+
+.consultation-empty-state {
+    min-height: 340px;
+    gap: 10px;
+    background: transparent;
+    border: 0;
+}
+
+.assistant-message-content {
+    width: min(100%, 860px);
 }
 
 .message-row {
@@ -547,6 +634,8 @@ textarea {
 .composer-label {
     color: #5b635f;
     font-size: 14px;
+    font-weight: 700;
+    padding: 16px 18px 0;
 }
 
 textarea {
@@ -805,6 +894,11 @@ textarea {
 
 .reference-header {
     align-items: flex-start;
+}
+
+.toolbar-action-inline {
+    align-items: center;
+    gap: 8px;
 }
 
 .reference-count {
@@ -1270,6 +1364,11 @@ h2 {
         height: auto;
     }
 
+    .conversation-status-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
     .reference-panel {
         position: static;
         max-height: none;
@@ -1340,6 +1439,10 @@ h2 {
     .search-table-header,
     .search-table-row {
         min-width: 900px;
+    }
+
+    .conversation-shell {
+        height: auto;
     }
 }
 

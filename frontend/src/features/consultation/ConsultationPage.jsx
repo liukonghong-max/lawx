@@ -1,14 +1,39 @@
 import React from "react";
 import { useMemo, useState } from "react";
-import { useConsultation } from "./useConsultation";
+import { Bot, RotateCcw } from "lucide-react";
+import {
+    Conversation,
+    ConversationContent,
+    ConversationEmptyState,
+    ConversationScrollButton
+} from "@/components/ai-elements/conversation";
+import {
+    Message,
+    MessageContent,
+    MessageResponse
+} from "@/components/ai-elements/message";
+import {
+    PromptInput,
+    PromptInputBody,
+    PromptInputFooter,
+    PromptInputSubmit,
+    PromptInputTextarea,
+    PromptInputTools
+} from "@/components/ai-elements/prompt-input";
+import {
+    Source,
+    Sources,
+    SourcesContent,
+    SourcesTrigger
+} from "@/components/ai-elements/sources";
+import { Button } from "@/components/ui/button";
+import { useAgUiConsultation } from "./useAgUiConsultation";
 
 const examples = [
     "别人欠钱不还怎么办",
     "房东不退押金怎么办",
     "公司拖欠工资怎么办"
 ];
-
-const answerActions = ["复制", "有用", "无用", "分享"];
 
 export default function ConsultationPage() {
     const [query, setQuery] = useState("别人欠钱不还怎么办");
@@ -18,7 +43,7 @@ export default function ConsultationPage() {
     const [highlightedSegmentCitationId, setHighlightedSegmentCitationId] = useState("");
     const [showAllCitations, setShowAllCitations] = useState(false);
     const [detailState, setDetailState] = useState({});
-    const { loading, answer, answerSegments, citations, error, submitQuestion, loadCitationDetail, reset } = useConsultation();
+    const { loading, answer, answerSegments, citations, error, statusText, submitQuestion, loadCitationDetail, reset } = useAgUiConsultation();
     const visibleCitations = showAllCitations ? citations : citations.slice(0, 3);
     const hiddenCitationCount = Math.max(citations.length - visibleCitations.length, 0);
     const citationIndexMap = useMemo(() => {
@@ -31,22 +56,46 @@ export default function ConsultationPage() {
         return map;
     }, [citations]);
 
-    const answerState = useMemo(() => {
-        if (loading) {
-            return { title: "正在检索法规依据", body: query };
+    const conversationMessages = useMemo(() => {
+        const messages = [];
+        if (submittedQuery) {
+            messages.push({
+                id: "user-latest",
+                role: "user",
+                content: submittedQuery
+            });
         }
+        if (answer) {
+            messages.push({
+                id: "assistant-latest",
+                role: "assistant",
+                content: answer
+            });
+        } else if (loading) {
+            messages.push({
+                id: "assistant-loading",
+                role: "assistant",
+                content: statusText || "正在生成回答..."
+            });
+        }
+        return messages;
+    }, [answer, loading, statusText, submittedQuery]);
+
+    const answerState = useMemo(() => {
         if (error) {
             return { title: "请求失败", body: error, error: true };
+        }
+        if (!answer && loading) {
+            return { title: "正在检索法规依据", body: statusText || query };
         }
         if (!answer) {
             return { title: "等待提问", body: "回答会显示在这里，并在右侧同步列出引用依据。" };
         }
         return null;
-    }, [answer, error, loading, query]);
+    }, [answer, error, loading, query, statusText]);
 
-    async function handleSubmit(event) {
-        event.preventDefault();
-        const trimmed = query.trim();
+    async function handleSubmitInput(message) {
+        const trimmed = (message.text || "").trim();
         if (!trimmed) {
             return;
         }
@@ -56,6 +105,7 @@ export default function ConsultationPage() {
         setSubmittedQuery(trimmed);
         setOpenedId("");
         setDetailState({});
+        setQuery("");
         await submitQuestion(trimmed);
     }
 
@@ -130,143 +180,141 @@ export default function ConsultationPage() {
                     </div>
                     <div className="toolbar-meta">
                         <span className="toolbar-hint">案例咨询</span>
-                        <button className="toolbar-action" type="button" onClick={handleReset}>
+                        <button className="toolbar-action toolbar-action-inline" type="button" onClick={handleReset}>
+                            <RotateCcw size={14} />
                             清空对话
                         </button>
                     </div>
                 </div>
 
                 <section className="conversation-card">
-                    {submittedQuery ? (
-                        <article className="message-row user">
-                            <div className="avatar">人</div>
-                            <div className="message-bubble user-bubble">
-                                <div className="message-meta">
-                                    <strong>你</strong>
-                                    <span>今天 10:24</span>
-                                </div>
-                                <p>{submittedQuery}</p>
-                            </div>
-                        </article>
-                    ) : null}
-
-                    <article className="message-row assistant">
-                        <div className="avatar assistant-avatar">法</div>
-                        <div className="message-bubble assistant-bubble">
-                            {answerState ? (
-                                <div className={`empty-state ${answerState.error ? "error-state" : ""}`}>
-                                    <strong>{answerState.title}</strong>
-                                    <p>{answerState.body}</p>
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="message-meta">
-                                        <strong>法律咨询助手</strong>
-                                        <span>今天 10:24</span>
-                                    </div>
-                                    {citations.length ? (
-                                        <div className="answer-citation-nav">
-                                            <span className="answer-citation-label">本回答主要依据</span>
-                                            <div className="answer-citation-chips">
-                                                {citations.slice(0, 4).map((citation, index) => (
-                                                    <button
-                                                        key={citation.articleId || `${citation.documentTitle}-${index}`}
-                                                        type="button"
-                                                        className={`answer-citation-chip ${activeCitationId === citation.articleId ? "active" : ""}`}
-                                                        onClick={() => handleFocusCitation(citation)}
-                                                        onMouseEnter={() => handleCitationHover(citation.articleId)}
-                                                        onMouseLeave={handleCitationLeave}
-                                                    >
-                                                        依据 {index + 1}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ) : null}
-
-                                    {answerSegments && answerSegments.length ? (
-                                        <div className="answer-text">
-                                            {answerSegments.map((segment, index) => {
-                                                const isHighlighted = highlightedSegmentCitationId && segment.citationIds && segment.citationIds.includes(highlightedSegmentCitationId);
-                                                return (
-                                                    <div key={segment.id || index} className={`answer-segment ${isHighlighted ? "highlighted" : ""}`}>
-                                                        <span>{segment.text}</span>
-                                                        {segment.citationIds && segment.citationIds.length ? (
-                                                            <span className="segment-citation-tags">
-                                                                {segment.citationIds.map((cId) => {
-                                                                    const citeIndex = citationIndexMap.get(cId);
-                                                                    const citation = citations.find(c => c.articleId === cId);
-                                                                    if (!citeIndex || !citation) return null;
-                                                                    return (
-                                                                        <button
-                                                                            key={cId}
-                                                                            type="button"
-                                                                            className="segment-citation-tag"
-                                                                            onClick={() => handleFocusCitation(citation)}
-                                                                            onMouseEnter={() => handleCitationHover(cId)}
-                                                                            onMouseLeave={handleCitationLeave}
-                                                                        >
-                                                                            [依据{citeIndex}]
-                                                                        </button>
-                                                                    );
-                                                                })}
-                                                            </span>
-                                                        ) : null}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <div className="answer-text">{answer}</div>
-                                    )}
-
-                                    <div className="notice">以上内容由 AI 生成，仅供参考，不构成法律意见。</div>
-                                    <div className="assistant-actions">
-                                        {answerActions.map((action) => (
-                                            <button key={action} type="button" className="assistant-action-button">
-                                                {action}
-                                            </button>
-                                        ))}
-                                        <span className="assistant-status">已完成思考</span>
-                                    </div>
-                                </>
-                            )}
+                    <div className="conversation-status-bar">
+                        <div className="conversation-status-copy">
+                            <span className="badge">AI 法律助手</span>
+                            <span className="conversation-status-text">
+                                {loading ? (statusText || "正在生成回答") : answer ? "已生成答复" : "先描述事实，再补充证据线索"}
+                            </span>
                         </div>
-                    </article>
+                        <span className="reference-count">已引用 {citations.length} 条依据</span>
+                    </div>
+
+                    <div className="agui-chat-shell">
+                        <Conversation className="agui-conversation">
+                            <ConversationContent className="agui-conversation-content">
+                                {conversationMessages.length === 0 && answerState ? (
+                                    <ConversationEmptyState
+                                        className="consultation-empty-state"
+                                        title={answerState.title}
+                                        description={answerState.body}
+                                        icon={<Bot size={28} />}
+                                    />
+                                ) : (
+                                    conversationMessages.map((message) => (
+                                        <div key={message.id}>
+                                            {message.role === "assistant" && citations.length ? (
+                                                <Sources className="agui-sources">
+                                                    <SourcesTrigger count={Math.min(citations.length, 4)}>
+                                                        <span>本回答主要依据 {Math.min(citations.length, 4)} 条法条</span>
+                                                    </SourcesTrigger>
+                                                    <SourcesContent>
+                                                        {citations.slice(0, 4).map((citation, index) => (
+                                                            <Source
+                                                                key={citation.articleId || `${citation.documentTitle}-${index}`}
+                                                                href="#"
+                                                                title={`${citation.documentTitle || "未知法规"} ${citation.articleNo || ""}`.trim()}
+                                                                onClick={(event) => {
+                                                                    event.preventDefault();
+                                                                    handleFocusCitation(citation);
+                                                                }}
+                                                                onMouseEnter={() => handleCitationHover(citation.articleId)}
+                                                                onMouseLeave={handleCitationLeave}
+                                                            />
+                                                        ))}
+                                                    </SourcesContent>
+                                                </Sources>
+                                            ) : null}
+                                            <Message from={message.role}>
+                                                <MessageContent className={message.role === "assistant" ? "assistant-message-content" : ""}>
+                                                    {message.role === "assistant" && answerSegments && answerSegments.length ? (
+                                                        <div className="answer-text">
+                                                            {answerSegments.map((segment, index) => {
+                                                                const isHighlighted = highlightedSegmentCitationId && segment.citationIds && segment.citationIds.includes(highlightedSegmentCitationId);
+                                                                return (
+                                                                    <div key={segment.id || index} className={`answer-segment ${isHighlighted ? "highlighted" : ""}`}>
+                                                                        <span>{segment.text}</span>
+                                                                        {segment.citationIds && segment.citationIds.length ? (
+                                                                            <span className="segment-citation-tags">
+                                                                                {segment.citationIds.map((cId) => {
+                                                                                    const citeIndex = citationIndexMap.get(cId);
+                                                                                    const citation = citations.find((c) => c.articleId === cId);
+                                                                                    if (!citeIndex || !citation) {
+                                                                                        return null;
+                                                                                    }
+                                                                                    return (
+                                                                                        <button
+                                                                                            key={cId}
+                                                                                            type="button"
+                                                                                            className="segment-citation-tag"
+                                                                                            onClick={() => handleFocusCitation(citation)}
+                                                                                            onMouseEnter={() => handleCitationHover(cId)}
+                                                                                            onMouseLeave={handleCitationLeave}
+                                                                                        >
+                                                                                            [依据{citeIndex}]
+                                                                                        </button>
+                                                                                    );
+                                                                                })}
+                                                                            </span>
+                                                                        ) : null}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    ) : (
+                                                        <MessageResponse>{message.content}</MessageResponse>
+                                                    )}
+                                                    {message.role === "assistant" ? (
+                                                        <>
+                                                            {!loading ? <div className="notice">以上内容由 AI 生成，仅供参考，不构成法律意见。</div> : null}
+                                                            <div className="assistant-actions">
+                                                                <span className="assistant-status">{loading ? (statusText || "正在生成回答") : "已完成思考"}</span>
+                                                            </div>
+                                                        </>
+                                                    ) : null}
+                                                </MessageContent>
+                                            </Message>
+                                        </div>
+                                    ))
+                                )}
+                            </ConversationContent>
+                            <ConversationScrollButton />
+                        </Conversation>
+                    </div>
                 </section>
 
                 <section className="composer-panel">
-                    <form className="composer-form" onSubmit={handleSubmit}>
-                        <div className="composer-label">输入你的法律问题，或粘贴合同/文书片段...</div>
-                        <textarea
-                            id="questionInput"
-                            value={query}
-                            onChange={(event) => setQuery(event.target.value)}
-                            placeholder="例如：公司拖欠工资怎么办？我应该准备哪些证据？"
-                            required
-                        />
-                        <div className="composer-footer">
-                            <div className="composer-actions">
-                                <button className="secondary-button" type="button">
-                                    上传文件
-                                </button>
-                                <button className="secondary-button" type="button">
-                                    粘贴
-                                </button>
+                    <div className="composer-label">输入你的法律问题，或粘贴合同/文书片段...</div>
+                    <PromptInput className="composer-form agui-prompt-input" onSubmit={handleSubmitInput}>
+                        <PromptInputBody>
+                            <PromptInputTextarea
+                                value={query}
+                                onChange={(event) => setQuery(event.target.value)}
+                                placeholder="例如：公司拖欠工资怎么办？我应该准备哪些证据？"
+                            />
+                        </PromptInputBody>
+                        <PromptInputFooter>
+                            <PromptInputTools className="agui-prompt-tools">
                                 {examples.map((example) => (
-                                    <button key={example} className="ghost-chip" type="button" onClick={() => setQuery(example)}>
+                                    <Button key={example} type="button" variant="ghost" size="sm" onClick={() => setQuery(example)}>
                                         {example}
-                                    </button>
+                                    </Button>
                                 ))}
-                            </div>
+                            </PromptInputTools>
                             <div className="composer-submit">
                                 <span>{query.length} / 2000</span>
-                                <button className="primary-button" type="submit" disabled={loading}>
-                                    {loading ? "发送中..." : "发送"}
-                                </button>
+                                <PromptInputSubmit disabled={!query.trim()} status={loading ? "streaming" : "ready"} />
                             </div>
-                        </div>
-                    </form>
+                        </PromptInputFooter>
+                    </PromptInput>
                 </section>
             </section>
 
