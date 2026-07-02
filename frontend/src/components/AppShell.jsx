@@ -19,7 +19,7 @@ export default function AppShell() {
             <Sidebar items={views} activeView={activeView} onChange={setActiveView} />
             <main className="workspace">
                 {activeView === "consultation" ? (
-                    <ConsultationPage />
+                    <ConsultationPage onNavigate={setActiveView} />
                 ) : activeView === "search" ? (
                     <ProfessionalSearchPage />
                 ) : activeView === "library" ? (

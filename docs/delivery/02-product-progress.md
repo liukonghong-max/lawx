@@ -1,6 +1,6 @@
 # MVP 产品进度看板
 
-最后更新：2026-07-01
+最后更新：2026-07-02
 
 ## 1. 产品最终目标
 
@@ -33,7 +33,7 @@ MVP 不是 AI 律师，不输出无来源结论，不承诺诉讼结果。所有
 2. 引用依据面板可用。
 3. 专业检索页可用。
 4. 法规库浏览可用。
-5. 再做 AG-UI 流式体验。
+5. 补齐 AG-UI 对话状态模型与 tool 编排。
 6. 最后补 RAG 评价、MVP 评测集和质量看板。
 
 ## 3. 已完成能力
@@ -109,12 +109,14 @@ MVP 不是 AI 律师，不输出无来源结论，不承诺诉讼结果。所有
 
 ### P2：流式和 Agent 编排
 
-- [ ] AG-UI `/ag-ui` 接口。
-- [ ] SSE 流式回答。
+- [x] AG-UI `/ag-ui` 接口。
+- [x] SSE 流式回答。
 - [ ] tool call 过程展示。
 - [ ] AgentScope Java v2 RAG tool：`searchLawArticles`。
 - [ ] AgentScope Java v2 RAG tool：`getArticleDetail`。
 - [ ] 引用校验 tool：`validateCitations`。
+- [ ] AG-UI `citations / answerSegments / state` 完整同步。
+- [ ] 会话持久化与历史对话恢复。
 
 ### P2：质量闭环
 
@@ -131,16 +133,17 @@ MVP 不是 AI 律师，不输出无来源结论，不承诺诉讼结果。所有
 
 ```text
 进入 P2
- -> AG-UI `/ag-ui` 接口
- -> SSE 流式回答
- -> AgentScope tool：searchLawArticles / getArticleDetail / validateCitations
+ -> 把现有 law/rag use case 提升为 AgentScope tools
+ -> 把 citations / answerSegments 接入 AG-UI state
+ -> 补齐会话持久化与历史对话
 ```
 
 验收标准：
 
-- `/ag-ui` 能承接正式前端后续工作台接入。
-- 回答过程支持流式返回。
+- `/ag-ui` 已稳定承接正式前端工作台接入。
+- 回答过程已支持流式返回。
 - AgentScope RAG tools 形成后续 Agent 编排基础能力。
+- 前端能基于 AG-UI 直接消费 `citations / answerSegments / conversation state`。
 
 ## 6. 后续推进规则
 

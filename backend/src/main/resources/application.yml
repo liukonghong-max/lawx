@@ -25,6 +25,6 @@ law4x:
     default-session-id: ${LAW4X_AGENTSCOPE_DEFAULT_SESSION_ID:law4x-web}
     stateful: ${LAW4X_AGENTSCOPE_STATEFUL:true}
     provider: ${LAW4X_AGENTSCOPE_PROVIDER:openai-compatible}
-    model-name: ${LAW4X_AGENTSCOPE_MODEL:ark-code-latest}
+    model-name: ${LAW4X_AGENTSCOPE_MODEL:deepseek-v4-flash}
     api-key: ${LAW4X_AGENTSCOPE_API_KEY:${ARK_API_KEY:ark-c283855c-da17-4601-9320-61123b0611c8-06cb6}}
     base-url: ${LAW4X_AGENTSCOPE_BASE_URL:${ARK_BASE_URL:https://ark.cn-beijing.volces.com/api/coding/v3}}

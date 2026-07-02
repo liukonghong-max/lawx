@@ -10,19 +10,46 @@
 
 ---
 
+## 当前执行状态（2026-07-02）
+
+- 总体进度：约 `60%`
+- 当前判断：`前后端对话流式已经打通，并且已经正式跑在 AG-UI 协议上；当前计划的重点不再是“打通协议”，而是“补齐 tool 化、state/citations 同步和完整产品闭环”`
+- 已落地文件：
+  - `backend/src/main/java/com/law4x/agui/interfaces/rest/AgUiRunController.java`
+  - `backend/src/main/java/com/law4x/agui/infrastructure/agent/AgUiAgentConfiguration.java`
+  - `backend/src/main/java/com/law4x/agui/infrastructure/agent/AgUiProtocolConfiguration.java`
+  - `backend/src/test/java/com/law4x/agui/interfaces/rest/AgUiRunControllerTest.java`
+  - `backend/src/test/java/com/law4x/agui/infrastructure/agent/AgUiAgentConfigurationTest.java`
+  - `frontend/src/features/consultation/aguiClient.js`
+  - `frontend/src/features/consultation/useAgUiConsultation.js`
+  - `frontend/src/features/consultation/ConsultationPage.jsx`
+  - `frontend/package.json`
+- 主要缺口：
+  - `Law4xAgUiToolset`、`CitationValidationService` 还不存在
+  - 当前仍主要是 `text stream + statusText`，还没有把 `citations / answerSegments / tool result state` 做成 AG-UI 驱动的完整状态流
+  - 会话持久化、历史对话切换、恢复能力还没接上
+  - 进度文档还未同步到“协议已通”的新状态
+
+---
+
 ### Task 1: 后端 `/ag-ui` 最小闭环
 
 **Files:**
 - Create: `backend/src/main/java/com/law4x/agui/interfaces/rest/AgUiRunController.java`
-- Create: `backend/src/main/java/com/law4x/agui/application/AgUiRunStreamService.java`
-- Create: `backend/src/main/java/com/law4x/agui/application/AgUiEventMapper.java`
 - Create: `backend/src/test/java/com/law4x/agui/interfaces/rest/AgUiRunControllerTest.java`
 - Modify: `backend/pom.xml`
 
-- [ ] 先为 `/ag-ui/runs` 写控制器测试，断言返回 `text/event-stream` 且输出 `run.started`、`message.delta`、`run.completed`
-- [ ] 跑测试，确认因控制器/服务不存在而失败
-- [ ] 实现最小控制器与伪流服务，让测试变绿
-- [ ] 运行该测试确认通过
+**状态：已完成**
+
+- [x] 已有 `/ag-ui/runs` 控制器测试，断言 `text/event-stream`，文件为 `AgUiRunControllerTest`
+- [x] 已有 `/ag-ui/runs` 控制器实现，当前由 `AguiAgentAdapter` 直接驱动
+- [x] 已有 `AgUiProtocolConfiguration`，完成 `AguiAdapterConfig + AguiAgentAdapter` 装配
+- [x] 当前协议链路已经具备可联调能力
+
+**备注：**
+
+- 原计划中单独增加 `AgUiRunStreamService / AgUiEventMapper` 的做法可以不再作为前置必做项。
+- 当前更合理的方向是：在现有 `agentscope-extensions-agui` 直连基础上补业务状态，而不是重复包一层协议桥接。
 
 ### Task 2: AgentScope `HarnessAgent` 与工具装配
 
@@ -33,22 +60,40 @@
 - Create: `backend/src/test/java/com/law4x/agui/infrastructure/agent/AgUiAgentConfigurationTest.java`
 - Modify: `backend/src/main/resources/application.yml`
 
-- [ ] 为 `HarnessAgent` 配置写测试，断言 Bean 可创建且依赖齐全
-- [ ] 跑测试确认失败
-- [ ] 实现 `HarnessAgent.builder()`、`RuntimeContext` 约定和 3 个 tools：`searchLawArticles`、`getArticleDetail`、`validateCitations`
-- [ ] 跑测试确认通过
+**状态：部分完成**
 
-### Task 3: AgentScope 事件桥接到 AG-UI
+- [x] 已有 `HarnessAgent` Bean 配置测试：`AgUiAgentConfigurationTest`
+- [x] 已有 `HarnessAgent.builder()` 最小实现：`AgUiAgentConfiguration`
+- [ ] `RuntimeContext` 约定未见落地
+- [ ] `searchLawArticles` 未落地为 AG-UI tool
+- [ ] `getArticleDetail` 未落地为 AG-UI tool
+- [ ] `validateCitations` 未落地为 AG-UI tool
+- [ ] `Law4xAgUiToolset` 未创建
+- [ ] `CitationValidationService` 未创建
+- [ ] 本轮未重新执行后端测试确认
+
+**备注：**
+
+- 当前 Agent 已经能被 AG-UI 协议驱动，但 law/rag 现有 use case 还没有正式提升成 tool 集。
+
+### Task 3: AG-UI 业务状态补齐
 
 **Files:**
-- Modify: `backend/src/main/java/com/law4x/agui/application/AgUiRunStreamService.java`
-- Modify: `backend/src/main/java/com/law4x/agui/application/AgUiEventMapper.java`
-- Create: `backend/src/test/java/com/law4x/agui/application/AgUiEventMapperTest.java`
+- Modify: `frontend/src/features/consultation/useAgUiConsultation.js`
+- Modify: `frontend/src/features/consultation/ConsultationPage.jsx`
+- Modify: `backend/src/main/java/com/law4x/agui/interfaces/rest/AgUiRunController.java` 或新增业务状态组装层
+- Optional: Create `backend/src/main/java/com/law4x/agui/application/AgUiConversationStateService.java`
 
-- [ ] 先写事件映射测试，覆盖 tool started/completed、文本增量、运行完成
-- [ ] 跑测试确认失败
-- [ ] 实现对 `streamEvents()` 的消费和 AG-UI 事件映射
-- [ ] 跑测试确认通过
+**状态：未开始**
+
+- [ ] 把 `citations` 变成 AG-UI 运行结果的一部分
+- [ ] 把 `answerSegments` 从纯文本占位升级成真实结构化片段
+- [ ] 明确 tool call 结果如何同步到前端 state
+- [ ] 统一前端对 `messages / state / tool events` 的消费方式
+
+**备注：**
+
+- 这里的重点已经不是“协议事件怎么转”，而是“业务结果怎么附着到 AG-UI state/message 上”。
 
 ### Task 4: 前端接入 Vercel AG-UI
 
@@ -59,10 +104,21 @@
 - Modify: `frontend/src/features/consultation/ConsultationPage.jsx`
 - Modify: `frontend/src/features/consultation/api.js`
 
-- [ ] 为前端数据层写最小测试或在无法直接测试时先写可独立验证的 adapter 结构
-- [ ] 安装 Vercel AG-UI 依赖并实现 SSE client adapter
-- [ ] 把公众咨询页从同步 `createRagAnswer` 切到 AG-UI 流式 hook
-- [ ] 本地构建前端，确认能通过编译
+**状态：主链路已完成，业务能力待补齐**
+
+- [x] 已安装 `@ag-ui/client`
+- [x] 已实现最小 SSE client adapter：`frontend/src/features/consultation/aguiClient.js`
+- [x] 已实现 `useAgUiConsultation` hook
+- [x] 已把公众咨询页切到 AG-UI hook
+- [x] 前端构建已通过
+- [ ] 未看到前端数据层测试
+- [ ] `citations` 仍未从 AG-UI 结果中增量填充
+- [ ] `answerSegments` 目前只有基础文本流，未与真实 citation 段落关联
+- [ ] `frontend/src/features/consultation/api.js` 仍保留旧的 `createRagAnswer` 同步接口
+
+**备注：**
+
+- 这部分不该再被视为“接入中”，而应该视为“已接入，正在补完咨询产品状态模型”。
 
 ### Task 5: 验证与文档
 
@@ -70,7 +126,20 @@
 - Modify: `docs/delivery/02-product-progress.md`
 - Modify: `docs/delivery/01-implementation-plan.md`
 
-- [ ] 运行后端相关测试
-- [ ] 运行前端构建
-- [ ] 根据实际完成情况更新进度文档
-- [ ] 记录剩余缺口，例如生产级 state store、恢复、AG-UI 细粒度协议兼容项
+**状态：需要重写为新阶段目标**
+
+- [ ] 后端相关测试本轮未统一回归
+- [x] 前端构建已通过
+- [ ] `docs/delivery/02-product-progress.md` 尚未更新
+- [ ] `docs/delivery/01-implementation-plan.md` 尚未更新
+- [x] 当前缺口已明确：
+  - 缺生产级 state store / 会话恢复
+  - 缺 AG-UI 业务状态建模
+  - 缺 citations 增量同步
+  - 缺 tool call 真正可视化过程
+
+**建议下一步：**
+
+1. 先补 `Task 2`，把现有 law/rag 能力包装成正式 tools。
+2. 再补 `Task 3`，统一 `messages + state + citations + answerSegments` 的消费模型。
+3. 最后补会话持久化、历史对话和文档状态。

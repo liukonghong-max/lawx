@@ -76,17 +76,16 @@
 
 ### 目标
 
-基于检索结果生成带引用回答。
+基于检索结果生成带引用回答，并通过 AG-UI 协议对外提供流式对话能力。
 
 ### 任务
 
 - 接入 AgentScope Java v2。
-- 实现 `searchLawArticles` tool。
-- 实现 `getArticleDetail` tool。
-- 实现 `validateCitations` tool。
 - 实现 AG-UI 接口。
 - 实现公众咨询页。
 - 实现右侧引用依据面板。
+- 将现有 `law/rag` use case 提升为 `searchLawArticles`、`getArticleDetail`、`validateCitations` tools。
+- 将 `citations`、`answerSegments`、会话状态接入 AG-UI。
 
 ### 验收
 
@@ -96,6 +95,7 @@
 - 右侧显示引用法条。
 - 引用能回到原文条文。
 - 无依据时不编造。
+- 前端通过 AG-UI 流式拿到回答过程与最终状态。
 
 ## 阶段 5：专业检索增强
 
