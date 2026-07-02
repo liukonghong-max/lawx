@@ -17,7 +17,7 @@ public class AgUiProtocolConfiguration {
     @Bean
     AguiAdapterConfig aguiAdapterConfig() {
         return AguiAdapterConfig.builder()
-                .enableReasoning(true)
+                .enableReasoning(false)
                 .runTimeout(Duration.ofMinutes(5))
                 .toolMergeMode(ToolMergeMode.AGENT_ONLY)
                 .build();

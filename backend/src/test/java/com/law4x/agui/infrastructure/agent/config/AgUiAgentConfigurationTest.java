@@ -38,6 +38,7 @@ class AgUiAgentConfigurationTest {
                             .contains("不得调用 searchLawArticles")
                             .contains("输出最终回答前，必须调用 validateCitations")
                             .contains("基于已检索证据作答的助手")
+                            .contains("最终回答必须使用 Markdown 格式输出")
                             .contains("allowedCitationIds");
                 });
     }

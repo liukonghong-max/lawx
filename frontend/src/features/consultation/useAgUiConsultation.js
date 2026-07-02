@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { getLawArticleDetail } from "./api";
+import { getAgUiMessageCitations, getLawArticleDetail } from "./api";
 import { resetConsultationThread, runConsultation } from "./aguiClient";
 
 export function useAgUiConsultation() {
@@ -8,41 +8,21 @@ export function useAgUiConsultation() {
     const [reasoning, setReasoning] = useState("");
     const [toolCalls, setToolCalls] = useState([]);
     const [citations, setCitations] = useState([]);
-    const [answerSegments, setAnswerSegments] = useState([]);
     const [error, setError] = useState("");
     const [statusText, setStatusText] = useState("");
     const detailCacheRef = useRef(new Map());
 
-    function applyStructuredState(state) {
-        if (!state || typeof state !== "object") {
-            return;
+    function normalizeCitations(items) {
+        if (!Array.isArray(items)) {
+            return [];
         }
-
-        if (typeof state.answer === "string") {
-            setAnswer(state.answer);
-        }
-
-        if (Array.isArray(state.citations)) {
-            setCitations(
-                state.citations.map((citation) => ({
-                    articleId: citation?.articleId || "",
-                    documentTitle: citation?.documentTitle || "",
-                    articleNo: citation?.articleNo || "",
-                    fullPath: citation?.fullPath || "",
-                    quotedText: citation?.quotedText || ""
-                }))
-            );
-        }
-
-        if (Array.isArray(state.answerSegments)) {
-            setAnswerSegments(
-                state.answerSegments.map((segment, index) => ({
-                    id: segment?.id || `seg-${index + 1}`,
-                    text: segment?.text || "",
-                    citationIds: Array.isArray(segment?.citationIds) ? segment.citationIds.filter(Boolean) : []
-                }))
-            );
-        }
+        return items.map((citation) => ({
+            articleId: citation?.articleId || "",
+            documentTitle: citation?.documentTitle || "",
+            articleNo: citation?.articleNo || "",
+            fullPath: citation?.fullPath || "",
+            quotedText: citation?.quotedText || ""
+        }));
     }
 
     async function submitQuestion(query) {
@@ -52,7 +32,6 @@ export function useAgUiConsultation() {
         setReasoning("");
         setToolCalls([]);
         setCitations([]);
-        setAnswerSegments([]);
         setStatusText("正在连接 AG-UI 流式回答");
 
         try {
@@ -62,13 +41,6 @@ export function useAgUiConsultation() {
                 },
                 onTextMessageContentEvent({ textMessageBuffer }) {
                     setAnswer(textMessageBuffer || "");
-                    setAnswerSegments([
-                        {
-                            id: "seg-streaming",
-                            text: textMessageBuffer || "",
-                            citationIds: []
-                        }
-                    ]);
                 },
                 onReasoningMessageStartEvent() {
                     setReasoning("");
@@ -90,15 +62,8 @@ export function useAgUiConsultation() {
                 onToolCallEndEvent({ event }) {
                     setStatusText(`工具完成：${event.toolCallName}`);
                 },
-                onStateSnapshotEvent({ event }) {
-                    applyStructuredState(event.snapshot);
-                    setStatusText("正在整理引用依据");
-                },
-                onStateChanged({ state }) {
-                    applyStructuredState(state);
-                },
                 onRunFinishedEvent() {
-                    setStatusText("回答完成");
+                    setStatusText("正在整理引用依据");
                 },
                 onRunErrorEvent({ event }) {
                     setError(event.message || "请求失败，请稍后重试。");
@@ -111,14 +76,22 @@ export function useAgUiConsultation() {
                 setAnswer(assistantMessage.content);
             }
             setToolCalls(Array.isArray(result?.toolCalls) ? result.toolCalls : []);
-            applyStructuredState(result?.state);
+            if (assistantMessage?.id) {
+                try {
+                    const citationPayload = await getAgUiMessageCitations(assistantMessage.id);
+                    setCitations(normalizeCitations(citationPayload?.citations));
+                } catch (citationError) {
+                    setCitations([]);
+                    setError((currentError) => currentError || citationError.message || "依据加载失败，请稍后重试。");
+                }
+            }
+            setStatusText("回答完成");
         } catch (submitError) {
             setError(submitError.message || "无法连接后端服务。");
             setAnswer("");
             setReasoning("");
             setToolCalls([]);
             setCitations([]);
-            setAnswerSegments([]);
             setStatusText("");
         } finally {
             setLoading(false);
@@ -140,7 +113,6 @@ export function useAgUiConsultation() {
         setReasoning("");
         setToolCalls([]);
         setCitations([]);
-        setAnswerSegments([]);
         setError("");
         setStatusText("");
     }
@@ -150,7 +122,6 @@ export function useAgUiConsultation() {
         answer,
         reasoning,
         toolCalls,
-        answerSegments,
         citations,
         error,
         statusText,

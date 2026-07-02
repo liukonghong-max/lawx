@@ -73,7 +73,7 @@ export default function ConsultationPage({ onNavigate }) {
     const [highlightedSegmentCitationId, setHighlightedSegmentCitationId] = useState("");
     const [showAllCitations, setShowAllCitations] = useState(false);
     const [detailState, setDetailState] = useState({});
-    const { loading, answer, reasoning, toolCalls, answerSegments, citations, error, statusText, submitQuestion, loadCitationDetail, reset } = useAgUiConsultation();
+    const { loading, answer, reasoning, toolCalls, citations, error, statusText, submitQuestion, loadCitationDetail, reset } = useAgUiConsultation();
     const hasStartedConversation = Boolean(submittedQuery || answer || loading || error);
     const visibleCitations = showAllCitations ? citations : citations.slice(0, 3);
     const hiddenCitationCount = Math.max(citations.length - visibleCitations.length, 0);
@@ -86,6 +86,7 @@ export default function ConsultationPage({ onNavigate }) {
         });
         return map;
     }, [citations]);
+    const citedCitations = citations;
 
     const conversationMessages = useMemo(() => {
         const messages = [];
@@ -125,8 +126,9 @@ export default function ConsultationPage({ onNavigate }) {
         return null;
     }, [answer, error, loading, query, statusText]);
 
+    const hasToolActivity = Array.isArray(toolCalls) && toolCalls.length > 0;
     const hasAssistantRichContent = Boolean(
-        reasoning || (Array.isArray(toolCalls) && toolCalls.length) || (Array.isArray(answerSegments) && answerSegments.length)
+        reasoning || hasToolActivity || answer
     );
 
     async function handleSubmitInput(message) {
@@ -275,18 +277,23 @@ export default function ConsultationPage({ onNavigate }) {
                                                             {message.role === "assistant" && hasAssistantRichContent ? (
                                                                 <>
                                                                     {reasoning ? (
-                                                                        <Reasoning className="consultation-reasoning" isStreaming={loading && !answer}>
+                                                                        <Reasoning
+                                                                            autoOpenOnStreaming={false}
+                                                                            className="consultation-reasoning"
+                                                                            defaultOpen={false}
+                                                                            isStreaming={loading && !answer}
+                                                                        >
                                                                             <ReasoningTrigger />
                                                                             <ReasoningContent>{reasoning}</ReasoningContent>
                                                                         </Reasoning>
                                                                     ) : null}
-                                                                    {toolCalls?.length ? (
+                                                                    {hasToolActivity ? (
                                                                         <div className="tool-call-stack">
                                                                             {toolCalls.map((toolCall) => (
                                                                                 <Tool
                                                                                     key={toolCall.id}
                                                                                     className="consultation-tool"
-                                                                                    defaultOpen={toolCall.state !== "input-streaming"}
+                                                                                    defaultOpen={false}
                                                                                 >
                                                                                     <ToolHeader
                                                                                         title={formatToolName(toolCall.toolCallName)}
@@ -305,42 +312,29 @@ export default function ConsultationPage({ onNavigate }) {
                                                                             ))}
                                                                         </div>
                                                                     ) : null}
-                                                                    {answerSegments.length ? (
-                                                                        <div className="answer-text">
-                                                                            {answerSegments.map((segment, index) => {
-                                                                                const isHighlighted = highlightedSegmentCitationId && segment.citationIds && segment.citationIds.includes(highlightedSegmentCitationId);
-                                                                                return (
-                                                                                    <div key={segment.id || index} className={`answer-segment ${isHighlighted ? "highlighted" : ""}`}>
-                                                                                        <MessageResponse>{segment.text}</MessageResponse>
-                                                                                        {segment.citationIds && segment.citationIds.length ? (
-                                                                                            <span className="segment-citation-tags">
-                                                                                                {segment.citationIds.map((cId) => {
-                                                                                                    const citeIndex = citationIndexMap.get(cId);
-                                                                                                    const citation = citations.find((c) => c.articleId === cId);
-                                                                                                    if (!citeIndex || !citation) {
-                                                                                                        return null;
-                                                                                                    }
-                                                                                                    return (
-                                                                                                        <button
-                                                                                                            key={cId}
-                                                                                                            type="button"
-                                                                                                            className="segment-citation-tag"
-                                                                                                            onClick={() => handleFocusCitation(citation)}
-                                                                                                            onMouseEnter={() => handleCitationHover(cId)}
-                                                                                                            onMouseLeave={handleCitationLeave}
-                                                                                                        >
-                                                                                                            [依据{citeIndex}]
-                                                                                                        </button>
-                                                                                                    );
-                                                                                                })}
-                                                                                            </span>
-                                                                                        ) : null}
+                                                                    {answer ? (
+                                                                        <>
+                                                                            <MessageResponse className="answer-markdown">{answer}</MessageResponse>
+                                                                            {citedCitations.length ? (
+                                                                                <div className="answer-citation-nav">
+                                                                                    <div className="answer-citation-label">本回答引用依据</div>
+                                                                                    <div className="answer-citation-chips">
+                                                                                        {citedCitations.map((citation) => (
+                                                                                            <button
+                                                                                                key={citation.articleId}
+                                                                                                type="button"
+                                                                                                className={`answer-citation-chip ${activeCitationId === citation.articleId ? "active" : ""}`}
+                                                                                                onClick={() => handleFocusCitation(citation)}
+                                                                                                onMouseEnter={() => handleCitationHover(citation.articleId)}
+                                                                                                onMouseLeave={handleCitationLeave}
+                                                                                            >
+                                                                                                依据 {citationIndexMap.get(citation.articleId) || "?"}
+                                                                                            </button>
+                                                                                        ))}
                                                                                     </div>
-                                                                                );
-                                                                            })}
-                                                                        </div>
-                                                                    ) : answer ? (
-                                                                        <MessageResponse>{answer}</MessageResponse>
+                                                                                </div>
+                                                                            ) : null}
+                                                                        </>
                                                                     ) : null}
                                                                 </>
                                                             ) : (

@@ -12,23 +12,35 @@
 
 ## 当前执行状态（2026-07-02）
 
-- 总体进度：约 `60%`
-- 当前判断：`前后端对话流式已经打通，并且已经正式跑在 AG-UI 协议上；当前计划的重点不再是“打通协议”，而是“补齐 tool 化、state/citations 同步和完整产品闭环”`
+- 总体进度：约 `75%`
+- 当前判断：`前后端对话流式、AG-UI 协议、HarnessAgent、grounding 注入、正式 tools、服务端预检索与 hybrid grounding 已经打通；当前阶段已经从“Task 2: tools 装配”进入“Task 3: AG-UI 业务状态补齐”`
 - 已落地文件：
   - `backend/src/main/java/com/law4x/agui/interfaces/rest/AgUiRunController.java`
-  - `backend/src/main/java/com/law4x/agui/infrastructure/agent/AgUiAgentConfiguration.java`
-  - `backend/src/main/java/com/law4x/agui/infrastructure/agent/AgUiProtocolConfiguration.java`
+  - `backend/src/main/java/com/law4x/agui/infrastructure/agent/config/AgUiAgentConfiguration.java`
+  - `backend/src/main/java/com/law4x/agui/infrastructure/agent/config/AgUiProtocolConfiguration.java`
+  - `backend/src/main/java/com/law4x/agui/infrastructure/agent/middleware/AgUiGroundingPromptMiddleware.java`
+  - `backend/src/main/java/com/law4x/agui/infrastructure/agent/runtime/AgUiRuntimeContextHolder.java`
+  - `backend/src/main/java/com/law4x/agui/infrastructure/agent/runtime/GroundedHarnessAgent.java`
+  - `backend/src/main/java/com/law4x/agui/infrastructure/agent/tool/Law4xAgUiToolset.java`
+  - `backend/src/main/java/com/law4x/agui/infrastructure/agent/tool/Law4xConsultationToolset.java`
+  - `backend/src/main/java/com/law4x/agui/application/service/AgUiConsultationGroundingService.java`
+  - `backend/src/main/java/com/law4x/agui/application/service/AgUiConversationStateService.java`
+  - `backend/src/main/java/com/law4x/agui/application/service/CitationValidationService.java`
   - `backend/src/test/java/com/law4x/agui/interfaces/rest/AgUiRunControllerTest.java`
-  - `backend/src/test/java/com/law4x/agui/infrastructure/agent/AgUiAgentConfigurationTest.java`
+  - `backend/src/test/java/com/law4x/agui/infrastructure/agent/config/AgUiAgentConfigurationTest.java`
+  - `backend/src/test/java/com/law4x/agui/infrastructure/agent/config/AgUiProtocolConfigurationTest.java`
+  - `backend/src/test/java/com/law4x/agui/application/service/AgUiConsultationGroundingServiceTest.java`
+  - `backend/src/test/java/com/law4x/agui/application/service/AgUiConversationStateServiceTest.java`
+  - `backend/src/test/java/com/law4x/agui/infrastructure/agent/tool/Law4xAgUiToolsetTest.java`
   - `frontend/src/features/consultation/aguiClient.js`
   - `frontend/src/features/consultation/useAgUiConsultation.js`
   - `frontend/src/features/consultation/ConsultationPage.jsx`
   - `frontend/package.json`
 - 主要缺口：
-  - `Law4xAgUiToolset`、`CitationValidationService` 还不存在
-  - 当前仍主要是 `text stream + statusText`，还没有把 `citations / answerSegments / tool result state` 做成 AG-UI 驱动的完整状态流
+  - 当前虽然已有 `citations / answerSegments / state` 基础结构，但前端还没有完全按 AG-UI 原生状态模型消费
+  - tool call / tool result 的前端标准可视化仍未补齐
   - 会话持久化、历史对话切换、恢复能力还没接上
-  - 进度文档还未同步到“协议已通”的新状态
+  - 文档状态还停留在较早阶段，未反映当前真实进度
 
 ---
 
@@ -60,21 +72,22 @@
 - Create: `backend/src/test/java/com/law4x/agui/infrastructure/agent/AgUiAgentConfigurationTest.java`
 - Modify: `backend/src/main/resources/application.yml`
 
-**状态：部分完成**
+**状态：已基本完成**
 
 - [x] 已有 `HarnessAgent` Bean 配置测试：`AgUiAgentConfigurationTest`
 - [x] 已有 `HarnessAgent.builder()` 最小实现：`AgUiAgentConfiguration`
-- [ ] `RuntimeContext` 约定未见落地
-- [ ] `searchLawArticles` 未落地为 AG-UI tool
-- [ ] `getArticleDetail` 未落地为 AG-UI tool
-- [ ] `validateCitations` 未落地为 AG-UI tool
-- [ ] `Law4xAgUiToolset` 未创建
-- [ ] `CitationValidationService` 未创建
-- [ ] 本轮未重新执行后端测试确认
+- [x] `RuntimeContext` 约定已落地：`AgUiRuntimeContextHolder + GroundedHarnessAgent + AgUiGroundingPromptMiddleware`
+- [x] `getArticleDetail` 已落地为正式 tool
+- [x] `validateCitations` 已落地为正式 tool
+- [x] `Law4xAgUiToolset` 已创建
+- [x] `CitationValidationService` 已创建
+- [x] 本轮已重新执行 AG-UI 相关后端测试确认
+- [ ] `searchLawArticles` 不再作为咨询 agent 必调 tool，而是由服务端预检索承担
 
 **备注：**
 
-- 当前 Agent 已经能被 AG-UI 协议驱动，但 law/rag 现有 use case 还没有正式提升成 tool 集。
+- 当前设计已从“是否由模型自行决定检索”切换为“服务端先 grounding，再由 agent 基于证据回答并校验引用”。
+- `searchLawArticles` 仍保留在 `Law4xAgUiToolset` 中作为可复用能力，但不再暴露给咨询 agent 的 toolkit。
 
 ### Task 3: AG-UI 业务状态补齐
 
@@ -84,10 +97,12 @@
 - Modify: `backend/src/main/java/com/law4x/agui/interfaces/rest/AgUiRunController.java` 或新增业务状态组装层
 - Optional: Create `backend/src/main/java/com/law4x/agui/application/AgUiConversationStateService.java`
 
-**状态：未开始**
+**状态：进行中**
 
-- [ ] 把 `citations` 变成 AG-UI 运行结果的一部分
-- [ ] 把 `answerSegments` 从纯文本占位升级成真实结构化片段
+- [x] 已有 `AgUiConversationStateService` 生成 `citations / answerSegments / answer`
+- [x] 已有 `AgUiConsultationGroundingService` 在服务端预检索并写入 `allowedCitationIds / citations`
+- [ ] 把 `citations` 变成前端稳定消费的 AG-UI 运行结果，而不是仅依赖最终 state 兜底
+- [ ] 把 `answerSegments` 从后端基础结构升级成前端可直接消费的真实引用分段
 - [ ] 明确 tool call 结果如何同步到前端 state
 - [ ] 统一前端对 `messages / state / tool events` 的消费方式
 
@@ -112,8 +127,8 @@
 - [x] 已把公众咨询页切到 AG-UI hook
 - [x] 前端构建已通过
 - [ ] 未看到前端数据层测试
-- [ ] `citations` 仍未从 AG-UI 结果中增量填充
-- [ ] `answerSegments` 目前只有基础文本流，未与真实 citation 段落关联
+- [ ] `citations` 仍未以 ai-elements / AG-UI 原生方式稳定增量填充
+- [ ] `answerSegments` 尚未与真实 citation 段落和可点击依据联动
 - [ ] `frontend/src/features/consultation/api.js` 仍保留旧的 `createRagAnswer` 同步接口
 
 **备注：**
@@ -126,20 +141,52 @@
 - Modify: `docs/delivery/02-product-progress.md`
 - Modify: `docs/delivery/01-implementation-plan.md`
 
-**状态：需要重写为新阶段目标**
+**状态：需要按当前真实进度重写**
 
-- [ ] 后端相关测试本轮未统一回归
+- [x] 后端 AG-UI 关键测试本轮已回归：
+  - `AgUiConsultationGroundingServiceTest`
+  - `AgUiConversationStateServiceTest`
+  - `AgUiRunControllerTest`
+  - `AgUiAgentConfigurationTest`
+  - `AgUiProtocolConfigurationTest`
 - [x] 前端构建已通过
-- [ ] `docs/delivery/02-product-progress.md` 尚未更新
-- [ ] `docs/delivery/01-implementation-plan.md` 尚未更新
+- [ ] `docs/delivery/02-product-progress.md` 需要同步到当前状态
+- [ ] `docs/delivery/01-implementation-plan.md` 如继续作为总计划，也需要同步
 - [x] 当前缺口已明确：
   - 缺生产级 state store / 会话恢复
   - 缺 AG-UI 业务状态建模
   - 缺 citations 增量同步
   - 缺 tool call 真正可视化过程
 
-**建议下一步：**
+## 下一阶段开发计划（P2 下半程）
 
-1. 先补 `Task 2`，把现有 law/rag 能力包装成正式 tools。
-2. 再补 `Task 3`，统一 `messages + state + citations + answerSegments` 的消费模型。
-3. 最后补会话持久化、历史对话和文档状态。
+### Phase 3A: AG-UI 状态模型收口
+
+- [ ] 明确后端单一输出模型：`answer / citations / answerSegments / allowedCitationIds / toolState`
+- [ ] 统一 `AgUiRunController` 在流式结束和中间态的 state 写入策略
+- [ ] 统一前端 `useAgUiConsultation` 对 `messages / state / tool events` 的消费入口
+
+### Phase 3B: citations 与 answerSegments 前端闭环
+
+- [ ] 把 `citations` 改成前端直接可渲染的依据数据源
+- [ ] 让 `answerSegments` 与 citationIds 建立稳定映射
+- [ ] 在会话区支持点击段落高亮对应依据
+
+### Phase 3C: tool 可视化
+
+- [ ] 把 `getArticleDetail`、`validateCitations` 的调用过程同步到前端
+- [ ] 使用 ai-elements 标准 tool/reasoning 能力展示调用状态和结果
+- [ ] 明确哪些 tool 结果进入 message，哪些进入 state
+
+### Phase 3D: 会话持久化与恢复
+
+- [ ] 定义会话存储结构：线程、消息、state snapshot
+- [ ] 支持历史会话列表、切换、恢复继续对话
+- [ ] 明确刷新页面后的恢复策略
+
+### 建议执行顺序
+
+1. 先做 `Phase 3A`
+2. 再做 `Phase 3B`
+3. 然后做 `Phase 3C`
+4. 最后做 `Phase 3D`

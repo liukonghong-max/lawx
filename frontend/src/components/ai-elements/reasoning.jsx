@@ -28,6 +28,7 @@ function useReasoning() {
 
 export function Reasoning({
     children,
+    autoOpenOnStreaming = true,
     className,
     defaultOpen = false,
     duration,
@@ -54,7 +55,7 @@ export function Reasoning({
             if (!startedAtRef.current) {
                 startedAtRef.current = Date.now();
             }
-            if (!isControlled) {
+            if (autoOpenOnStreaming && !isControlled) {
                 setUncontrolledOpen(true);
             }
             return;
@@ -64,7 +65,7 @@ export function Reasoning({
             setMeasuredDuration(Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000)));
             startedAtRef.current = null;
         }
-    }, [isControlled, isStreaming]);
+    }, [autoOpenOnStreaming, isControlled, isStreaming]);
 
     const contextValue = useMemo(() => ({
         duration: measuredDuration,

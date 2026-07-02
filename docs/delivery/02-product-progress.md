@@ -66,6 +66,10 @@ MVP 不是 AI 律师，不输出无来源结论，不承诺诉讼结果。所有
 - [x] 当前基于 AgentScope `ReActAgent` 驱动问答。
 - [x] 已为 workspace / memory / skill / sandbox / plan mode 预留宿主骨架。
 - [x] 已接入 structured output 约束，当前采用 `json_object + middleware + 严格解析`。
+- [x] 公众咨询主链路已切到 `HarnessAgent + AG-UI`。
+- [x] 服务端已改为“先 grounding 检索，再把证据喂给 agent”。
+- [x] 咨询 grounding 已从纯关键词切到 `keyword + vector hybrid`。
+- [x] 已有引用校验能力 `validateCitations`。
 
 ### 工程质量
 
@@ -111,11 +115,13 @@ MVP 不是 AI 律师，不输出无来源结论，不承诺诉讼结果。所有
 
 - [x] AG-UI `/ag-ui` 接口。
 - [x] SSE 流式回答。
+- [x] AgentScope Java v2 RAG tool：`getArticleDetail`。
+- [x] 引用校验 tool：`validateCitations`。
+- [x] 服务端 grounding 注入：`RuntimeContext + middleware + grounded agent`。
+- [x] 服务端已生成基础 `citations / answerSegments / state`。
 - [ ] tool call 过程展示。
-- [ ] AgentScope Java v2 RAG tool：`searchLawArticles`。
-- [ ] AgentScope Java v2 RAG tool：`getArticleDetail`。
-- [ ] 引用校验 tool：`validateCitations`。
-- [ ] AG-UI `citations / answerSegments / state` 完整同步。
+- [ ] `searchLawArticles` 是否继续作为咨询 agent 暴露 tool 仍待最终定型。
+- [ ] AG-UI `citations / answerSegments / state` 前端完整同步。
 - [ ] 会话持久化与历史对话恢复。
 
 ### P2：质量闭环
@@ -132,9 +138,10 @@ MVP 不是 AI 律师，不输出无来源结论，不承诺诉讼结果。所有
 当前应做：
 
 ```text
-进入 P2
- -> 把现有 law/rag use case 提升为 AgentScope tools
- -> 把 citations / answerSegments 接入 AG-UI state
+继续推进 P2 下半程
+ -> 收口 AG-UI 状态模型
+ -> 补齐 citations / answerSegments 前端消费
+ -> 增加 tool call 可视化
  -> 补齐会话持久化与历史对话
 ```
 
@@ -142,10 +149,33 @@ MVP 不是 AI 律师，不输出无来源结论，不承诺诉讼结果。所有
 
 - `/ag-ui` 已稳定承接正式前端工作台接入。
 - 回答过程已支持流式返回。
-- AgentScope RAG tools 形成后续 Agent 编排基础能力。
+- AgentScope RAG tools 已形成后续 Agent 编排基础能力。
 - 前端能基于 AG-UI 直接消费 `citations / answerSegments / conversation state`。
+- tool 调用过程在会话区可见。
+- 会话支持历史恢复。
 
-## 6. 后续推进规则
+## 6. 下一阶段开发计划
+
+### 阶段判断
+
+- 当前已从“打通 AG-UI 协议和 tool 装配”进入“补齐 AG-UI 业务状态模型”的阶段。
+- 效果调优、排序优化、RAG 质量优化暂时后置。
+
+### 下一阶段目标
+
+1. 后端统一输出 `answer / citations / answerSegments / toolState / allowedCitationIds`。
+2. 前端统一消费 `messages + state + tool events`。
+3. 会话区展示 tool call 过程，并支持依据联动。
+4. 增加会话持久化、历史列表和恢复能力。
+
+### 推荐执行顺序
+
+1. 先做 AG-UI 状态模型收口。
+2. 再做 citations 与 answerSegments 的前端闭环。
+3. 然后做 tool 可视化。
+4. 最后做会话持久化与恢复。
+
+## 7. 后续推进规则
 
 每完成一个功能，必须更新本文件：
 

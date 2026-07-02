@@ -1,7 +1,7 @@
 package com.law4x.agui.interfaces.rest;
 
 import com.law4x.agui.application.service.AgUiConsultationGroundingService;
-import com.law4x.agui.application.service.AgUiConversationStateService;
+import com.law4x.agui.application.service.AgUiMessageCitationService;
 import com.law4x.agui.infrastructure.agent.middleware.AgUiGroundingPromptMiddleware;
 import com.law4x.agui.infrastructure.agent.runtime.AgUiRuntimeContextHolder;
 import io.agentscope.core.agui.adapter.AguiAgentAdapter;
@@ -11,7 +11,7 @@ import io.agentscope.core.agui.model.RunAgentInput;
 import io.agentscope.core.agent.RuntimeContext;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,28 +26,28 @@ public class AgUiRunController {
     private final AguiAgentAdapter aguiAgentAdapter;
     private final AgUiRuntimeContextHolder agUiRuntimeContextHolder;
     private final AgUiConsultationGroundingService agUiConsultationGroundingService;
-    private final AgUiConversationStateService agUiConversationStateService;
+    private final AgUiMessageCitationService agUiMessageCitationService;
 
     public AgUiRunController(
             AguiAgentAdapter aguiAgentAdapter,
             AgUiRuntimeContextHolder agUiRuntimeContextHolder,
             AgUiConsultationGroundingService agUiConsultationGroundingService,
-            AgUiConversationStateService agUiConversationStateService
+            AgUiMessageCitationService agUiMessageCitationService
     ) {
         this.aguiAgentAdapter = aguiAgentAdapter;
         this.agUiRuntimeContextHolder = agUiRuntimeContextHolder;
         this.agUiConsultationGroundingService = agUiConsultationGroundingService;
-        this.agUiConversationStateService = agUiConversationStateService;
+        this.agUiMessageCitationService = agUiMessageCitationService;
     }
 
     @PostMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<AguiEvent> createRun(@RequestBody AgUiRunRequest request) {
-        AtomicReference<StringBuilder> answerBuffer = new AtomicReference<>(new StringBuilder());
         String latestUserQuery = latestUserQuery(request.messages());
         AgUiConsultationGroundingService.PreparedGrounding grounding =
                 agUiConsultationGroundingService.prepare(latestUserQuery, request.state(), request.runId());
-        RunAgentInput input = toRunAgentInput(request, grounding.state());
-        Map<String, Object> currentState = grounding.state();
+        agUiMessageCitationService.reserve(request.threadId(), request.runId(), grounding.state());
+        AtomicBoolean assistantMessageBound = new AtomicBoolean(false);
+        RunAgentInput input = toRunAgentInput(request, Map.of());
         RuntimeContext runtimeContext = RuntimeContext.builder()
                 .sessionId(request.threadId())
                 .userId("ag-ui")
@@ -59,20 +59,15 @@ public class AgUiRunController {
                     return aguiAgentAdapter.run(input);
                 })
                 .concatMap(event -> {
-                    if (event instanceof AguiEvent.TextMessageContent textMessageContent) {
-                        answerBuffer.get().append(textMessageContent.delta());
+                    if (event instanceof AguiEvent.TextMessageStart textMessageStart
+                            && "assistant".equals(normalizeRole(textMessageStart.role()))
+                            && assistantMessageBound.compareAndSet(false, true)) {
+                        agUiMessageCitationService.bindAssistantMessage(
+                                request.threadId(),
+                                request.runId(),
+                                textMessageStart.messageId()
+                        );
                         return Flux.just(event);
-                    }
-                    if (event instanceof AguiEvent.RunFinished runFinished) {
-                        Map<String, Object> finalState = agUiConversationStateService.buildFinalState(
-                                latestUserQuery,
-                                answerBuffer.get().toString(),
-                                currentState
-                        );
-                        return Flux.just(
-                                new AguiEvent.StateSnapshot(runFinished.threadId(), runFinished.runId(), finalState),
-                                event
-                        );
                     }
                     return Flux.just(event);
                 })

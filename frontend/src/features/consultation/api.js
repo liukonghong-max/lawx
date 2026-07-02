@@ -24,3 +24,12 @@ export async function getLawArticleDetail(articleId) {
     }
     return payload.data;
 }
+
+export async function getAgUiMessageCitations(messageId) {
+    const response = await fetch(`/api/ag-ui/messages/${messageId}/citations`);
+    const payload = await response.json();
+    if (!response.ok || payload.code !== 200 || !payload.data) {
+        throw new Error(payload.message || "请稍后重试。");
+    }
+    return payload.data;
+}

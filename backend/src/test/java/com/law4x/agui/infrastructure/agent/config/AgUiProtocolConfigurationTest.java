@@ -30,6 +30,7 @@ class AgUiProtocolConfigurationTest {
                 .run(context -> {
                     assertThat(context).hasSingleBean(AguiAdapterConfig.class);
                     assertThat(context).hasSingleBean(AguiAgentAdapter.class);
+                    assertThat(context.getBean(AguiAdapterConfig.class).isEnableReasoning()).isFalse();
                 });
     }
 }

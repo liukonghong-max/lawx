@@ -5,11 +5,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.law4x.agui.application.service.AgUiConsultationGroundingService;
-import com.law4x.agui.application.service.AgUiConversationStateService;
+import com.law4x.agui.application.service.AgUiMessageCitationService;
 import com.law4x.agui.infrastructure.agent.runtime.AgUiRuntimeContextHolder;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.agentscope.core.agui.adapter.AguiAdapterConfig;
 import io.agentscope.core.agui.adapter.AguiAgentAdapter;
-import io.agentscope.core.agui.event.AguiEvent;
 import io.agentscope.core.agent.Agent;
 import io.agentscope.core.agent.Event;
 import io.agentscope.core.agent.EventType;
@@ -21,7 +21,6 @@ import io.agentscope.core.message.UserMessage;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -70,14 +69,48 @@ class AgUiRunControllerTest {
                 .contains("RUN_STARTED")
                 .contains("TEXT_MESSAGE_START")
                 .contains("TEXT_MESSAGE_END")
-                .contains("STATE_SNAPSHOT")
-                .contains("\"citations\":[{\"articleId\":\"article-001\"}]")
                 .contains("RUN_FINISHED");
         org.assertj.core.api.Assertions.assertThat(LAST_MESSAGES.get())
                 .hasSize(1)
                 .satisfies(messages -> {
                     Msg user = messages.get(0);
                     org.assertj.core.api.Assertions.assertThat(user.getRole()).isEqualTo(MsgRole.USER);
+                });
+    }
+
+    @Autowired
+    private AgUiMessageCitationService agUiMessageCitationService;
+
+    @Test
+    void bindsGroundingCitationsToAssistantMessage() throws Exception {
+        mockMvc.perform(post("/ag-ui/runs")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "threadId": "thread-001",
+                                  "runId": "run-001",
+                                  "messages": [
+                                    {
+                                      "id": "msg-user-1",
+                                      "role": "user",
+                                      "content": "别人欠钱不还怎么办"
+                                    }
+                                  ]
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        org.assertj.core.api.Assertions.assertThat(agUiMessageCitationService.findByMessageId("msg-assistant-1"))
+                .isPresent()
+                .get()
+                .satisfies(payload -> {
+                    org.assertj.core.api.Assertions.assertThat(payload.messageId()).isEqualTo("msg-assistant-1");
+                    org.assertj.core.api.Assertions.assertThat(payload.allowedCitationIds()).containsExactly("article-001");
+                    org.assertj.core.api.Assertions.assertThat(payload.citations())
+                            .hasSize(1)
+                            .first()
+                            .satisfies(citation -> org.assertj.core.api.Assertions.assertThat((Map<String, Object>) citation)
+                                    .containsEntry("articleId", "article-001"));
                 });
     }
 
@@ -123,6 +156,7 @@ class AgUiRunControllerTest {
                 public Flux<Event> stream(List<Msg> messages, StreamOptions streamOptions) {
                     LAST_MESSAGES.set(List.copyOf(messages));
                     Msg reply = Msg.builder()
+                            .id("msg-assistant-1")
                             .name("test-agent")
                             .role(io.agentscope.core.message.MsgRole.ASSISTANT)
                             .content(List.of(TextBlock.builder().text("hello").build()))
@@ -178,18 +212,8 @@ class AgUiRunControllerTest {
         }
 
         @Bean
-        AgUiConversationStateService agUiConversationStateService() {
-            return new AgUiConversationStateService(null, null) {
-                @Override
-                public Map<String, Object> buildFinalState(String query, String answer, Map<String, Object> currentState) {
-                    return Map.ofEntries(
-                            Map.entry("answer", answer),
-                            Map.entry("citations", currentState.get("citations")),
-                            Map.entry("allowedCitationIds", currentState.get("allowedCitationIds")),
-                            Map.entry("answerSegments", List.of(Map.of("id", "seg-1", "text", answer, "citationIds", List.of())))
-                    );
-                }
-            };
+        AgUiMessageCitationService agUiMessageCitationService() {
+            return new AgUiMessageCitationService();
         }
     }
 }
